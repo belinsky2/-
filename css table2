@@ -1,0 +1,39 @@
+body {
+  width: 350px;
+  margin: 0;
+  padding: 0 10px;
+
+  font-size: 14px;
+  font-family: "Arial", sans-serif;
+}
+
+table {
+  border-collapse: collapse;
+  border-top: 1px solid black;
+  width: 350px;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid lightgrey;
+}
+
+.row_1 {
+  background-color: darkcyan;
+  color: white;
+  font-weight: bold;
+  border-bottom: 1px solid black;
+}
+
+.row_3 {
+  background-color: lightyellow;
+}
+
+.center {
+  text-align: center;
+  width: 33%;
+}
+
+.right {
+  text-align: right;
+}
