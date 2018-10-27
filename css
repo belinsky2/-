@@ -1,0 +1,27 @@
+body {
+  width: 350px;
+  margin: 0;
+  padding: 0 10px;
+
+  font-size: 14px;
+  font-family: "Arial", sans-serif;
+}
+
+table {
+  
+  border-bottom: 1px solid lightgray;
+  border-collapse: collapse;
+}
+
+th {
+  border-bottom: 2px solid black;
+  padding: 10px;
+}
+td {
+  border: 1px solid lightgray;
+  padding: 10px;
+}
+
+caption {
+  caption-side: bottom;
+}
