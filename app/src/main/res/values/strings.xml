@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Панчлайн</string>
+    <string name="m0_title">Панчлайн</string>
+    <string name="m0_subtitle">Рабочая тетрадь стендапа</string>
+    <string name="m0_status">Этап M0: скелет и канал доставки</string>
+</resources>
