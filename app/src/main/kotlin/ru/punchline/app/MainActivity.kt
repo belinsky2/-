@@ -10,12 +10,20 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import ru.punchline.app.backup.BackupScreen
+import ru.punchline.app.backup.BackupViewModel
 import ru.punchline.app.inbox.InboxScreen
 import ru.punchline.app.inbox.InboxViewModel
+
+private const val ROUTE_INBOX = "inbox"
+private const val ROUTE_BACKUP = "backup"
 
 class MainActivity : ComponentActivity() {
 
@@ -31,8 +39,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PunchlineTheme {
-                val viewModel: InboxViewModel = viewModel(factory = container.viewModelFactory())
-                InboxScreen(viewModel)
+                val navController = rememberNavController()
+                val factory = container.viewModelFactory()
+
+                NavHost(navController = navController, startDestination = ROUTE_INBOX) {
+                    composable(ROUTE_INBOX) {
+                        val vm: InboxViewModel = viewModel(factory = factory)
+                        InboxScreen(vm, onOpenBackup = { navController.navigate(ROUTE_BACKUP) })
+                    }
+                    composable(ROUTE_BACKUP) {
+                        val vm: BackupViewModel = viewModel(factory = factory)
+                        BackupScreen(vm)
+                    }
+                }
             }
         }
     }
@@ -54,6 +73,8 @@ fun AppContainer.viewModelFactory(): ViewModelProvider.Factory =
         override fun <T : ViewModel> create(modelClass: Class<T>): T = when {
             modelClass.isAssignableFrom(InboxViewModel::class.java) ->
                 InboxViewModel(bits) as T
+            modelClass.isAssignableFrom(BackupViewModel::class.java) ->
+                BackupViewModel(context, vault, sink) as T
             else -> error("Unknown ViewModel: ${modelClass.name}")
         }
     }

@@ -7,7 +7,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import ru.punchline.data.blob.BlobStore
+import ru.punchline.vault.BlobStore
 import ru.punchline.data.db.PunchlineDatabase
 import ru.punchline.data.repo.BitRepository
 import ru.punchline.data.repo.DateKeys
@@ -17,6 +17,7 @@ import ru.punchline.data.repo.MutationSink
 import ru.punchline.data.repo.SetListRepository
 import ru.punchline.data.repo.StreakRepository
 import ru.punchline.data.repo.TopicRepository
+import ru.punchline.data.vault.VaultService
 import ru.punchline.model.Clock
 import ru.punchline.model.DeviceId
 
@@ -39,7 +40,10 @@ class PunchlineApp : Application() {
  */
 class AppContainer(context: Context) {
 
-    private val appContext = context.applicationContext
+    /** Контекст приложения: живёт столько же, сколько процесс, и не течёт. */
+    val context: Context = context.applicationContext
+
+    private val appContext = this.context
 
     val clock: Clock = Clock { System.currentTimeMillis() }
 
@@ -86,6 +90,15 @@ class AppContainer(context: Context) {
     val streaks = StreakRepository(database.streaks(), sink, clock, dateKeys)
 
     val exercises = ExerciseCatalog(database.exercises())
+
+    val vault = VaultService(
+        context = appContext,
+        database = database,
+        blobs = blobs,
+        clock = clock,
+        deviceId = deviceId,
+        appVersion = BuildConfig.VERSION_NAME,
+    )
 
     suspend fun seedExercises() {
         val raw = appContext.assets.open(EXERCISES_ASSET).bufferedReader().use { it.readText() }

@@ -215,3 +215,29 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercise_entries WHERE exercise_number = :number AND deleted_at IS NULL LIMIT 1")
     suspend fun entryFor(number: Int): ExerciseEntryEntity?
 }
+
+/**
+ * Хеши аудио, на которые ссылается хоть одна живая запись.
+ *
+ * Собирается одним запросом по всем таблицам: перебор в коде означал бы,
+ * что добавленная позже таблица с аудио тихо выпадет из бэкапа.
+ */
+@Dao
+interface AudioReferenceDao {
+    @Query(
+        """
+        SELECT act_out_audio_hash AS hash FROM bits
+            WHERE deleted_at IS NULL AND act_out_audio_hash IS NOT NULL
+        UNION
+        SELECT audio_hash AS hash FROM rants
+            WHERE deleted_at IS NULL
+        UNION
+        SELECT audio_hash AS hash FROM morning_writings
+            WHERE deleted_at IS NULL AND audio_hash IS NOT NULL
+        UNION
+        SELECT audio_hash AS hash FROM gigs
+            WHERE deleted_at IS NULL AND audio_hash IS NOT NULL
+        """
+    )
+    suspend fun referencedHashes(): List<String>
+}

@@ -26,6 +26,7 @@ rootProject.name = "punchline"
 // поэтому доменную логику можно проверять там, где Google Maven недоступен:
 //   PUNCHLINE_JVM_ONLY=1 ./gradlew :core:model:test
 include(":core:model")
+include(":core:vault")
 
 if (System.getenv("PUNCHLINE_JVM_ONLY") != "1") {
     include(":core:data")

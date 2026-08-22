@@ -6,4 +6,18 @@
     <string name="inbox_capture_hint">Что зацепило?</string>
     <string name="inbox_capture_action">Записать</string>
     <string name="inbox_empty">Пусто. Сюда падают идеи на ходу — потом разберём их на премису и панч.</string>
+    <string name="inbox_open_backup">Перенос данных</string>
+    <string name="inbox_open_backup_icon">⤓</string>
+
+    <string name="backup_title">Перенос данных</string>
+    <string name="backup_explainer">Весь материал — тексты, аудио, история выступлений — выгружается в один файл. Положи его туда, откуда сможешь достать: смена телефона или потеря устройства иначе означает потерю всего.</string>
+    <string name="backup_export">Выгрузить всё в файл</string>
+    <string name="backup_exported">Готово. Файл сохранён.</string>
+    <string name="backup_import">Восстановить из файла</string>
+    <string name="backup_preview">В архиве аудиозаписей: %1$d</string>
+    <string name="backup_import_warning">Восстановление заменит всё, что сейчас в приложении. После него приложение перезапустится.</string>
+    <string name="backup_import_confirm">Заменить данные</string>
+    <string name="backup_cancel">Отмена</string>
+    <string name="backup_imported">Данные восстановлены. Перезапусти приложение.</string>
+    <string name="backup_failed">Не получилось: %1$s</string>
 </resources>

@@ -1,4 +1,4 @@
-package ru.punchline.data.blob
+package ru.punchline.vault
 
 import java.io.File
 import java.io.InputStream

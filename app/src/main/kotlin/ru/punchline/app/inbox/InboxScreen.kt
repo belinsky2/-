@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -37,12 +38,21 @@ import ru.punchline.model.Bit
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InboxScreen(viewModel: InboxViewModel) {
+fun InboxScreen(viewModel: InboxViewModel, onOpenBackup: () -> Unit) {
     val items by viewModel.inbox.collectAsStateWithLifecycle()
     var draft by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.inbox_title)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.inbox_title)) },
+                actions = {
+                    IconButton(onClick = onOpenBackup) {
+                        Text(stringResource(R.string.inbox_open_backup_icon))
+                    }
+                },
+            )
+        },
     ) { insets ->
         Column(
             modifier = Modifier.fillMaxSize().padding(insets).padding(horizontal = 16.dp),

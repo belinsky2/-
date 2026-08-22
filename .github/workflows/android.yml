@@ -26,10 +26,10 @@ jobs:
       # и ломается содержательно, а не из-за окружения.
       # JVM-режим: доменные тесты не должны падать из-за конфигурации Android.
       # Если сломалась логика — видно сразу, а не через ошибку резолва плагина.
-      - name: Domain tests
+      - name: Domain and vault tests
         env:
           PUNCHLINE_JVM_ONLY: '1'
-        run: ./gradlew :core:model:test
+        run: ./gradlew :core:model:test :core:vault:test
 
       - name: Static checks
         run: ./gradlew :app:checkNoHardcodedCyrillic

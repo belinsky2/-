@@ -4,8 +4,8 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
 import java.io.File
-import ru.punchline.data.blob.BlobStore
-import ru.punchline.data.blob.StoredBlob
+import ru.punchline.vault.BlobStore
+import ru.punchline.vault.StoredBlob
 
 /**
  * Диктофон. Стендап пишется вслух, поэтому запись — первичный ввод, а текст

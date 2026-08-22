@@ -42,6 +42,7 @@ abstract class PunchlineDatabase : RoomDatabase() {
     abstract fun audioBlobs(): AudioBlobDao
     abstract fun profile(): ProfileDao
     abstract fun exercises(): ExerciseDao
+    abstract fun audioReferences(): AudioReferenceDao
 
     companion object {
         const val VERSION = 1

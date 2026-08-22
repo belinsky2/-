@@ -34,6 +34,7 @@ ksp {
 
 dependencies {
     api(project(":core:model"))
+    api(project(":core:vault"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.room.runtime)
