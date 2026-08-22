@@ -10,8 +10,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.punchline.data.repo.BitRepository
 import ru.punchline.data.repo.MutationSink
+import ru.punchline.data.repo.TopicRepository
 import ru.punchline.data.vault.VaultService
+import ru.punchline.model.MarkdownExport
+import ru.punchline.model.MarkdownLabels
 import ru.punchline.vault.ImportOutcome
 import ru.punchline.vault.ImportPreview
 
@@ -20,6 +24,7 @@ sealed interface BackupState {
     data object Idle : BackupState
     data object Working : BackupState
     data class Exported(val bytes: Long) : BackupState
+    data object MarkdownExported : BackupState
     data class Inspected(val preview: ImportPreview, val source: Uri) : BackupState
     data class Imported(val blobCount: Int) : BackupState
     data class Failed(val reason: String) : BackupState
@@ -29,6 +34,9 @@ class BackupViewModel(
     private val context: Context,
     private val vault: VaultService,
     private val sink: MutationSink,
+    private val bits: BitRepository,
+    private val topics: TopicRepository,
+    private val markdownLabels: MarkdownLabels,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<BackupState>(BackupState.Idle)
@@ -71,6 +79,28 @@ class BackupViewModel(
                     is ImportOutcome.Failed -> BackupState.Failed(outcome.problem.toString())
                 }
             }.onFailure { _state.value = BackupState.Failed(it.message.orEmpty()) }
+        }
+    }
+
+    /**
+     * Выгрузка в Markdown. Не бэкап: обратно не разворачивается, зато читается
+     * где угодно — в заметках, в редакторе, на распечатке перед выходом.
+     */
+    fun exportMarkdown(target: Uri, untitledTopic: String) {
+        _state.value = BackupState.Working
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    val grouped = bits.allByTopicTitle { id ->
+                        topics.titleOf(id)?.title ?: untitledTopic
+                    }
+                    val text = MarkdownExport.render(grouped, markdownLabels)
+                    context.contentResolver.openOutputStream(target)?.use { out ->
+                        out.write(text.toByteArray())
+                    } ?: error("no stream")
+                }
+            }.onSuccess { _state.value = BackupState.MarkdownExported }
+                .onFailure { _state.value = BackupState.Failed(it.message.orEmpty()) }
         }
     }
 

@@ -33,6 +33,11 @@ fun BackupScreen(viewModel: BackupViewModel) {
         ActivityResultContracts.CreateDocument(MIME_ZIP)
     ) { uri -> uri?.let(viewModel::export) }
 
+    val untitledTopic = stringResource(R.string.backup_untitled_topic)
+    val createMarkdown = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(MIME_MARKDOWN)
+    ) { uri -> uri?.let { viewModel.exportMarkdown(it, untitledTopic) } }
+
     val openDocument = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri -> uri?.let(viewModel::inspect) }
@@ -53,6 +58,12 @@ fun BackupScreen(viewModel: BackupViewModel) {
         ) { Text(stringResource(R.string.backup_export)) }
 
         OutlinedButton(
+            onClick = { createMarkdown.launch(markdownFileName()) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state !is BackupState.Working,
+        ) { Text(stringResource(R.string.backup_export_markdown)) }
+
+        OutlinedButton(
             onClick = { openDocument.launch(arrayOf(MIME_ZIP, MIME_ANY)) },
             modifier = Modifier.fillMaxWidth(),
             enabled = state !is BackupState.Working,
@@ -63,6 +74,7 @@ fun BackupScreen(viewModel: BackupViewModel) {
             BackupState.Working -> CircularProgressIndicator()
 
             is BackupState.Exported -> Info(stringResource(R.string.backup_exported))
+            BackupState.MarkdownExported -> Info(stringResource(R.string.backup_markdown_exported))
 
             is BackupState.Inspected -> Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
@@ -105,6 +117,10 @@ private fun Info(text: String) {
 
 private const val MIME_ZIP = "application/zip"
 private const val MIME_ANY = "application/octet-stream"
+private const val MIME_MARKDOWN = "text/markdown"
 
 private fun defaultFileName(): String =
     "punchline-" + java.time.LocalDate.now() + ".zip"
+
+private fun markdownFileName(): String =
+    "punchline-" + java.time.LocalDate.now() + ".md"

@@ -95,6 +95,13 @@ class BitRepository(
     suspend fun byId(id: Id): Bit? = bits.byId(id.value)?.toDomain()
 
     /**
+     * Весь живой материал, сгруппированный по названию темы. Нужно выгрузке
+     * в Markdown: там читателю важна тема, а не её идентификатор.
+     */
+    suspend fun allByTopicTitle(titleOf: suspend (Id?) -> String): Map<String, List<Bit>> =
+        bits.alive().map { it.toDomain() }.groupBy { titleOf(it.topicId) }
+
+    /**
      * Правка шутки. Снимок предыдущей версии делается не чаще раза в
      * [SNAPSHOT_INTERVAL_MS]: иначе набор текста породит сотню записей в истории.
      */

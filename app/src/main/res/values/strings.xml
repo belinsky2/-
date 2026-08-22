@@ -175,6 +175,17 @@
     <string name="backup_explainer">Весь материал — тексты, аудио, история выступлений — выгружается в один файл. Положи его туда, откуда сможешь достать: смена телефона или потеря устройства иначе означает потерю всего.</string>
     <string name="backup_export">Выгрузить всё в файл</string>
     <string name="backup_exported">Готово. Файл сохранён.</string>
+    <string name="backup_export_markdown">Выгрузить текст в Markdown</string>
+    <string name="backup_markdown_exported">Текст выгружен. Это не бэкап — обратно он не разворачивается.</string>
+    <string name="backup_untitled_topic">Без темы</string>
+    <string name="markdown_title">Панчлайн — выгрузка материала</string>
+    <string name="markdown_my_act">Мой акт</string>
+    <string name="markdown_in_progress">Шутки в работе</string>
+    <string name="markdown_archive">Архив</string>
+    <string name="markdown_premise">Премиса</string>
+    <string name="markdown_punch">Панч</string>
+    <string name="markdown_act_out">Act-out</string>
+    <string name="markdown_tags">Добивки</string>
     <string name="backup_import">Восстановить из файла</string>
     <string name="backup_preview">В архиве аудиозаписей: %1$d</string>
     <string name="backup_import_warning">Восстановление заменит всё, что сейчас в приложении. После него приложение перезапустится.</string>

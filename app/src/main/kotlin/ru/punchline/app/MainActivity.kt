@@ -56,6 +56,7 @@ import ru.punchline.app.workshop.BitWorkshopViewModel
 import ru.punchline.app.workshop.MindMapScreen
 import ru.punchline.app.workshop.MindMapViewModel
 import ru.punchline.model.Id
+import ru.punchline.model.MarkdownLabels
 
 private const val ROUTE_TODAY = "today"
 private const val ROUTE_INBOX = "inbox"
@@ -259,7 +260,7 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
                     StageViewModel(setLists, bits, gigs, streaks, requireNotNull(argument)) as T
 
                 modelClass.isAssignableFrom(BackupViewModel::class.java) ->
-                    BackupViewModel(context, vault, sink) as T
+                    BackupViewModel(context, vault, sink, bits, topics, markdownLabels()) as T
 
                 modelClass.isAssignableFrom(MindMapViewModel::class.java) ->
                     MindMapViewModel(workshop, requireNotNull(argument)) as T
@@ -284,3 +285,21 @@ fun AppContainer.reviewFactory(gigId: Id, setListId: Id?): ViewModelProvider.Fac
  * длина открытого микрофона и первая осмысленная веха у Картер.
  */
 private const val DEFAULT_GOAL_MINUTES = 5
+
+/**
+ * Подписи для выгрузки в Markdown. Берутся из ресурсов, а не зашиты в слое
+ * данных: правило «никакого видимого текста в коде» действует и здесь.
+ */
+private fun AppContainer.markdownLabels(): MarkdownLabels {
+    val res = context.resources
+    return MarkdownLabels(
+        documentTitle = res.getString(R.string.markdown_title),
+        myAct = res.getString(R.string.markdown_my_act),
+        inProgress = res.getString(R.string.markdown_in_progress),
+        archive = res.getString(R.string.markdown_archive),
+        premise = res.getString(R.string.markdown_premise),
+        punch = res.getString(R.string.markdown_punch),
+        actOut = res.getString(R.string.markdown_act_out),
+        tags = res.getString(R.string.markdown_tags),
+    )
+}
