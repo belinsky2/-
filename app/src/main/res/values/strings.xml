@@ -8,6 +8,7 @@
     <string name="tab_board">Материал</string>
     <string name="tab_practice">Практика</string>
     <string name="tab_morning">Дневник</string>
+    <string name="tab_setlists">Сеты</string>
 
     <!-- Входящие -->
     <string name="inbox_title">Входящие</string>
@@ -106,6 +107,41 @@
     <string name="morning_hint">Пиши не останавливаясь. Плохо — тоже нормально.</string>
     <string name="morning_save">Сохранить и закрыть день</string>
     <string name="morning_harvest">Это в материал</string>
+
+    <!-- Сет-листы -->
+    <string name="setlist_new_title">Название сета</string>
+    <string name="setlist_new_minutes">Сколько минут</string>
+    <string name="setlist_create">Создать сет</string>
+    <string name="setlist_target">Цель: %1$d мин</string>
+    <string name="setlist_edit">Собрать</string>
+    <string name="setlist_stage">На сцену</string>
+    <string name="setlist_timing">%1$d из %2$d мин</string>
+    <string name="setlist_position">%1$d. %2$s</string>
+    <string name="setlist_up">Выше</string>
+    <string name="setlist_down">Ниже</string>
+    <string name="setlist_role">Роль</string>
+    <string name="setlist_remove">Убрать</string>
+    <string name="setlist_candidates">Что можно добавить</string>
+    <string name="role_opener">Открытие</string>
+    <string name="role_body">Тело</string>
+    <string name="role_closer">Закрытие</string>
+    <string name="role_callback">Каллбэк</string>
+    <string name="issue_callback_order">Каллбэк стоит раньше шутки, на которую ссылается — зал не поймёт отсылку.</string>
+    <string name="issue_same_topic">Две шутки подряд на одну тему. Разбавь.</string>
+    <string name="issue_weak_closer">Закрываешь не самым сильным. В сете есть шутка, которая заходит лучше.</string>
+    <string name="issue_over_time">Перебор примерно на %1$d мин.</string>
+    <string name="issue_under_time">Не хватает примерно %1$d мин.</string>
+
+    <!-- Режим сцены -->
+    <string name="stage_before">Перед выходом: экран не погаснет, тап — следующий номер.</string>
+    <string name="stage_venue">Где выступаешь</string>
+    <string name="stage_start_open_mic">Начать выступление</string>
+    <string name="stage_start_rehearsal">Это репетиция</string>
+    <string name="stage_cancel">Назад</string>
+    <string name="stage_timer">%1$02d:%2$02d из %3$d мин</string>
+    <string name="stage_position">%1$d из %2$d</string>
+    <string name="stage_back">Назад</string>
+    <string name="stage_finish">Закончил</string>
 
     <!-- Перенос данных -->
     <string name="backup_title">Перенос данных</string>

@@ -39,6 +39,12 @@ import ru.punchline.app.morning.MorningScreen
 import ru.punchline.app.morning.MorningViewModel
 import ru.punchline.app.practice.PracticeScreen
 import ru.punchline.app.practice.PracticeViewModel
+import ru.punchline.app.setlist.SetListDetailScreen
+import ru.punchline.app.setlist.SetListDetailViewModel
+import ru.punchline.app.setlist.SetListsScreen
+import ru.punchline.app.setlist.SetListsViewModel
+import ru.punchline.app.stage.StageScreen
+import ru.punchline.app.stage.StageViewModel
 import ru.punchline.app.topics.TopicsScreen
 import ru.punchline.app.topics.TopicsViewModel
 import ru.punchline.app.workshop.BitWorkshopScreen
@@ -52,6 +58,9 @@ private const val ROUTE_TOPICS = "topics"
 private const val ROUTE_BOARD = "board"
 private const val ROUTE_PRACTICE = "practice"
 private const val ROUTE_MORNING = "morning"
+private const val ROUTE_SETLISTS = "setlists"
+private const val ROUTE_SETLIST_DETAIL = "setlist"
+private const val ROUTE_STAGE = "stage"
 private const val ROUTE_BACKUP = "backup"
 private const val ARG_ID = "id"
 private const val ROUTE_MINDMAP = "mindmap"
@@ -62,6 +71,7 @@ private enum class Tab(val route: String, val labelRes: Int) {
     TOPICS(ROUTE_TOPICS, R.string.tab_topics),
     BOARD(ROUTE_BOARD, R.string.tab_board),
     PRACTICE(ROUTE_PRACTICE, R.string.tab_practice),
+    SETLISTS(ROUTE_SETLISTS, R.string.tab_setlists),
     MORNING(ROUTE_MORNING, R.string.tab_morning),
 }
 
@@ -142,6 +152,24 @@ private fun PunchlineApp(container: AppContainer) {
             composable(ROUTE_MORNING) {
                 MorningScreen(viewModel = viewModel(factory = container.factory()))
             }
+            composable(ROUTE_SETLISTS) {
+                SetListsScreen(
+                    viewModel = viewModel(factory = container.factory()),
+                    onOpen = { navController.navigate("$ROUTE_SETLIST_DETAIL/${it.value}") },
+                    onStage = { navController.navigate("$ROUTE_STAGE/${it.value}") },
+                )
+            }
+            composable("$ROUTE_SETLIST_DETAIL/{$ARG_ID}") { entry ->
+                val id = Id(entry.arguments?.getString(ARG_ID).orEmpty())
+                SetListDetailScreen(viewModel = viewModel(factory = container.factory(id)))
+            }
+            composable("$ROUTE_STAGE/{$ARG_ID}") { entry ->
+                val id = Id(entry.arguments?.getString(ARG_ID).orEmpty())
+                StageScreen(
+                    viewModel = viewModel(factory = container.factory(id)),
+                    onExit = { navController.popBackStack() },
+                )
+            }
             composable(ROUTE_BACKUP) {
                 BackupScreen(viewModel = viewModel(factory = container.factory()))
             }
@@ -189,6 +217,15 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
 
                 modelClass.isAssignableFrom(MorningViewModel::class.java) ->
                     MorningViewModel(practice, streaks, bits) as T
+
+                modelClass.isAssignableFrom(SetListsViewModel::class.java) ->
+                    SetListsViewModel(setLists) as T
+
+                modelClass.isAssignableFrom(SetListDetailViewModel::class.java) ->
+                    SetListDetailViewModel(setLists, bits, gigs, requireNotNull(argument)) as T
+
+                modelClass.isAssignableFrom(StageViewModel::class.java) ->
+                    StageViewModel(setLists, bits, gigs, streaks, requireNotNull(argument)) as T
 
                 modelClass.isAssignableFrom(BackupViewModel::class.java) ->
                     BackupViewModel(context, vault, sink) as T
