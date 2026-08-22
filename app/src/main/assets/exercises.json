@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "note": "Указатель по книге: номер, рабочий ярлык, страница. Текстов упражнений здесь нет — они в книге.",
+  "exercises": [
+    {
+      "number": 1,
+      "part": "intro",
+      "shortTitle": "Где ты на шкале смешного",
+      "bookPage": null,
+      "inputSchema": "scale"
+    },
+    {
+      "number": 2,
+      "part": "intro",
+      "shortTitle": "Сформулировать комедийную цель",
+      "bookPage": null,
+      "inputSchema": "statement"
+    },
+    {
+      "number": 3,
+      "part": "one",
+      "shortTitle": "Настройка рабочей тетради",
+      "bookPage": null,
+      "inputSchema": "checklist"
+    },
+    {
+      "number": 4,
+      "part": "one",
+      "shortTitle": "Утренние страницы",
+      "bookPage": null,
+      "inputSchema": "morning"
+    },
+    {
+      "number": 5,
+      "part": "one",
+      "shortTitle": "Найти площадку и записаться",
+      "bookPage": null,
+      "inputSchema": "list"
+    },
+    {
+      "number": 6,
+      "part": "one",
+      "shortTitle": "От страха сцены к спасательным фразам",
+      "bookPage": null,
+      "inputSchema": "list"
+    },
+    {
+      "number": 7,
+      "part": "one",
+      "shortTitle": "Найти комедийного напарника",
+      "bookPage": null,
+      "inputSchema": "checklist"
+    },
+    {
+      "number": 8,
+      "part": "two",
+      "shortTitle": "Найти свои аутентичные темы",
+      "bookPage": null,
+      "inputSchema": "topic-list"
+    },
+    {
+      "number": 9,
+      "part": "two",
+      "shortTitle": "Выбрать 3 лучшие темы",
+      "bookPage": null,
+      "inputSchema": "topic-scoring"
+    },
+    {
+      "number": 10,
+      "part": "two",
+      "shortTitle": "Mind-map по трём главным темам",
+      "bookPage": null,
+      "inputSchema": "mindmap"
+    },
+    {
+      "number": 11,
+      "part": "two",
+      "shortTitle": "Рант: орать и ругаться до смеха",
+      "bookPage": null,
+      "inputSchema": "rant"
+    },
+    {
+      "number": 12,
+      "part": "two",
+      "shortTitle": "Добавить act-out к шуткам",
+      "bookPage": null,
+      "inputSchema": "bit-actout"
+    },
+    {
+      "number": 13,
+      "part": "two",
+      "shortTitle": "Организовать шутки в работе",
+      "bookPage": null,
+      "inputSchema": "bit-batch"
+    },
+    {
+      "number": 14,
+      "part": "two",
+      "shortTitle": "Добавить space work к act-out",
+      "bookPage": null,
+      "inputSchema": "bit-spacework"
+    },
+    {
+      "number": 15,
+      "part": "two",
+      "shortTitle": "Панч через список из трёх",
+      "bookPage": null,
+      "inputSchema": "bit-punch-list-of-three"
+    },
+    {
+      "number": 16,
+      "part": "two",
+      "shortTitle": "Писать повороты для своих тем",
+      "bookPage": null,
+      "inputSchema": "bit-punch-turn"
+    },
+    {
+      "number": 17,
+      "part": "two",
+      "shortTitle": "Поворот, начиная с панчлайна",
+      "bookPage": null,
+      "inputSchema": "bit-punch-turn"
+    },
+    {
+      "number": 18,
+      "part": "two",
+      "shortTitle": "Тренировка микса",
+      "bookPage": null,
+      "inputSchema": "bit-punch-mix"
+    },
+    {
+      "number": 19,
+      "part": "two",
+      "shortTitle": "Миксы: смешное в своей семье",
+      "bookPage": null,
+      "inputSchema": "bit-punch-mix"
+    },
+    {
+      "number": 20,
+      "part": "two",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    },
+    {
+      "number": 21,
+      "part": "three",
+      "shortTitle": "Разбор профессиональных комиков",
+      "bookPage": null,
+      "inputSchema": "list"
+    },
+    {
+      "number": 22,
+      "part": "three",
+      "shortTitle": "Премисы: превратить несмешное в смешное",
+      "bookPage": null,
+      "inputSchema": "bit-premise"
+    },
+    {
+      "number": 23,
+      "part": "three",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    },
+    {
+      "number": 24,
+      "part": "three",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    },
+    {
+      "number": 25,
+      "part": "three",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    },
+    {
+      "number": 26,
+      "part": "three",
+      "shortTitle": "Создать убойное открытие",
+      "bookPage": null,
+      "inputSchema": "bit-opener"
+    },
+    {
+      "number": 27,
+      "part": "three",
+      "shortTitle": "Каллбэки для сильного финала",
+      "bookPage": null,
+      "inputSchema": "bit-callback"
+    },
+    {
+      "number": 28,
+      "part": "three",
+      "shortTitle": "На ноги: играем сет-лист",
+      "bookPage": null,
+      "inputSchema": "setlist"
+    },
+    {
+      "number": 29,
+      "part": "three",
+      "shortTitle": "Организовать сет-лист",
+      "bookPage": null,
+      "inputSchema": "setlist"
+    },
+    {
+      "number": 30,
+      "part": "three",
+      "shortTitle": "Как запомнить свой акт",
+      "bookPage": null,
+      "inputSchema": "checklist"
+    },
+    {
+      "number": 31,
+      "part": "three",
+      "shortTitle": "Исследовать свою комедийную персону",
+      "bookPage": null,
+      "inputSchema": "statement"
+    },
+    {
+      "number": 32,
+      "part": "three",
+      "shortTitle": "Работа с залом",
+      "bookPage": 186,
+      "inputSchema": "list"
+    },
+    {
+      "number": 33,
+      "part": "three",
+      "shortTitle": "Готовность к хеклерам",
+      "bookPage": null,
+      "inputSchema": "list"
+    },
+    {
+      "number": 34,
+      "part": "three",
+      "shortTitle": "Уложиться во время",
+      "bookPage": null,
+      "inputSchema": "gig-review"
+    },
+    {
+      "number": 35,
+      "part": "three",
+      "shortTitle": "Разбор акта: посчитать laugh score",
+      "bookPage": null,
+      "inputSchema": "gig-review"
+    },
+    {
+      "number": 36,
+      "part": "three",
+      "shortTitle": "Разбор акта: переписать акт",
+      "bookPage": null,
+      "inputSchema": "bit-batch"
+    },
+    {
+      "number": 37,
+      "part": "three",
+      "shortTitle": "Спасение при провале",
+      "bookPage": null,
+      "inputSchema": "list"
+    },
+    {
+      "number": 38,
+      "part": "four",
+      "shortTitle": "Самоирония на открытие",
+      "bookPage": 218,
+      "inputSchema": "bit-punch-self-mocking"
+    },
+    {
+      "number": 39,
+      "part": "four",
+      "shortTitle": "Мэш-апы половина на половину",
+      "bookPage": 221,
+      "inputSchema": "bit-punch-mix"
+    },
+    {
+      "number": 40,
+      "part": "four",
+      "shortTitle": "Шутки-сравнения",
+      "bookPage": null,
+      "inputSchema": "bit-punch-mix"
+    },
+    {
+      "number": 41,
+      "part": "four",
+      "shortTitle": "Шутка-диалог",
+      "bookPage": 233,
+      "inputSchema": "bit-actout"
+    },
+    {
+      "number": 42,
+      "part": "four",
+      "shortTitle": "Политика и новости",
+      "bookPage": 235,
+      "inputSchema": "bit-premise"
+    },
+    {
+      "number": 43,
+      "part": "four",
+      "shortTitle": "Пародии и голоса в акте",
+      "bookPage": 245,
+      "inputSchema": "bit-actout"
+    },
+    {
+      "number": 44,
+      "part": "four",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    },
+    {
+      "number": 45,
+      "part": "four",
+      "shortTitle": "Риффинг на сцене",
+      "bookPage": 251,
+      "inputSchema": "checklist"
+    },
+    {
+      "number": 46,
+      "part": "four",
+      "shortTitle": "Неохотное признание",
+      "bookPage": 257,
+      "inputSchema": "bit-premise"
+    },
+    {
+      "number": 47,
+      "part": "four",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    },
+    {
+      "number": 48,
+      "part": "four",
+      "shortTitle": "",
+      "bookPage": null,
+      "inputSchema": "universal"
+    }
+  ]
+}

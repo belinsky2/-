@@ -4,48 +4,56 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import ru.punchline.app.inbox.InboxScreen
+import ru.punchline.app.inbox.InboxViewModel
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { PunchlineTheme { M0Screen() } }
+
+        val container = (application as PunchlineApp).container
+
+        // Засев справочника упражнений идёт в фоне: он не должен задерживать
+        // первый экран, а правки пользователя всё равно не затираются.
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { container.seedExercises() }
+
+        setContent {
+            PunchlineTheme {
+                val viewModel: InboxViewModel = viewModel(factory = container.viewModelFactory())
+                InboxScreen(viewModel)
+            }
+        }
     }
 }
 
 /**
- * Тёмная схема по умолчанию: основной сценарий использования — тёмный зал
- * перед выходом на сцену, и светлый экран там слепит.
+ * Тёмная схема по умолчанию: приложение открывают в тёмном зале перед выходом,
+ * и светлый экран там слепит и автора, и первый ряд.
  */
 @Composable
 fun PunchlineTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = darkColorScheme(), content = content)
 }
 
-@Composable
-private fun M0Screen() {
-    Scaffold(modifier = Modifier.fillMaxSize()) { insets ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(insets).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.m0_title), style = MaterialTheme.typography.headlineLarge)
-            Text(stringResource(R.string.m0_subtitle), style = MaterialTheme.typography.bodyLarge)
-            Text(stringResource(R.string.m0_status), style = MaterialTheme.typography.bodySmall)
+/** Фабрика вместо DI-фреймворка: зависимостей мало, и все они видны здесь. */
+fun AppContainer.viewModelFactory(): ViewModelProvider.Factory =
+    object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T = when {
+            modelClass.isAssignableFrom(InboxViewModel::class.java) ->
+                InboxViewModel(bits) as T
+            else -> error("Unknown ViewModel: ${modelClass.name}")
         }
     }
-}

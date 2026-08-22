@@ -39,6 +39,9 @@ interface BitDao {
     @Query("SELECT * FROM bits WHERE deleted_at IS NULL ORDER BY updated_at DESC")
     fun observeAlive(): Flow<List<BitEntity>>
 
+    @Query("SELECT * FROM bits WHERE deleted_at IS NULL")
+    suspend fun alive(): List<BitEntity>
+
     @Query("SELECT * FROM bits WHERE deleted_at IS NULL AND status = :status ORDER BY updated_at DESC")
     fun observeByStatus(status: BitStatus): Flow<List<BitEntity>>
 

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Тема-заглушка: всё оформление живёт в Compose, здесь только окно до его старта. -->
+    <!-- Окно до старта Compose: чёрное, чтобы не было светлой вспышки при запуске. -->
     <style name="Theme.Punchline" parent="android:Theme.Material.NoActionBar">
-        <item name="android:statusBarColor">@android:color/black</item>
         <item name="android:windowBackground">@android:color/black</item>
     </style>
 </resources>
