@@ -36,7 +36,8 @@ fun GigReviewScreen(viewModel: GigReviewViewModel, onDone: () -> Unit) {
     val rows by viewModel.rows.collectAsStateWithLifecycle()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
     val promotions by viewModel.promotions.collectAsStateWithLifecycle()
-    val (marked, total) by viewModel.progress.collectAsStateWithLifecycle()
+    val progress by viewModel.progress.collectAsStateWithLifecycle()
+    val (marked, total) = progress
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),

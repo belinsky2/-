@@ -18,7 +18,7 @@ class TopicRepository(
     fun observeAll(): Flow<List<Topic>> =
         topics.observeAlive().map { list -> list.map { it.toDomain() } }
 
-    suspend fun titleOf(id: Id?): Topic? = id?.let { topics.byId(it.value)?.toDomain() }
+    suspend fun byId(id: Id?): Topic? = id?.let { topics.byId(it.value)?.toDomain() }
 
     suspend fun add(title: String): Id {
         val id = Id.generate(clock)

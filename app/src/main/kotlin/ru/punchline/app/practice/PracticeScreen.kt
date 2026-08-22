@@ -39,7 +39,8 @@ import ru.punchline.data.repo.ExerciseCard
 @Composable
 fun PracticeScreen(viewModel: PracticeViewModel) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
-    val (done, total) by rememberProgress(viewModel)
+    val progress by viewModel.progress.collectAsStateWithLifecycle()
+    val (done, total) = progress
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (total > 0) {
@@ -74,10 +75,6 @@ fun PracticeScreen(viewModel: PracticeViewModel) {
         }
     }
 }
-
-@Composable
-private fun rememberProgress(viewModel: PracticeViewModel): androidx.compose.runtime.State<Pair<Int, Int>> =
-    viewModel.progress.collectAsStateWithLifecycle()
 
 @Composable
 private fun ExerciseRow(card: ExerciseCard, viewModel: PracticeViewModel) {

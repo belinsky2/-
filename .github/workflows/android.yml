@@ -31,6 +31,12 @@ jobs:
           PUNCHLINE_JVM_ONLY: '1'
         run: ./gradlew :core:model:test :core:vault:test
 
+      # Дешёвая проверка перед долгой сборкой: ловит импорты, оставшиеся
+      # от переезда типа между модулями. Android локально не компилируется,
+      # и без неё такая опечатка обнаруживается только здесь, через три минуты.
+      - name: Import check
+        run: python3 tools/check-imports.py
+
       - name: Static checks
         run: ./gradlew :app:checkNoHardcodedCyrillic
 

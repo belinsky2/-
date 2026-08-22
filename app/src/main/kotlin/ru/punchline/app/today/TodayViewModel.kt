@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import ru.punchline.data.repo.BitRepository
-import ru.punchline.data.repo.Progress
+import ru.punchline.model.Progress
 import ru.punchline.data.repo.RankedBit
 import ru.punchline.data.repo.StatsRepository
 import ru.punchline.model.Funnel

@@ -92,7 +92,7 @@ class BackupViewModel(
             runCatching {
                 withContext(Dispatchers.IO) {
                     val grouped = bits.allByTopicTitle { id ->
-                        topics.titleOf(id)?.title ?: untitledTopic
+                        topics.byId(id)?.title ?: untitledTopic
                     }
                     val text = MarkdownExport.render(grouped, markdownLabels)
                     context.contentResolver.openOutputStream(target)?.use { out ->

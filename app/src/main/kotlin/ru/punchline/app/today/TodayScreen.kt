@@ -26,7 +26,8 @@ import ru.punchline.model.BitStatus
 @Composable
 fun TodayScreen(viewModel: TodayViewModel, onOpenInbox: () -> Unit, onOpenBackup: () -> Unit) {
     val progress by viewModel.progress.collectAsStateWithLifecycle()
-    val (best, worst) by viewModel.extremes.collectAsStateWithLifecycle()
+    val extremes by viewModel.extremes.collectAsStateWithLifecycle()
+    val (best, worst) = extremes
     val inbox by viewModel.inboxCount.collectAsStateWithLifecycle()
 
     Column(
