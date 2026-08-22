@@ -6,6 +6,8 @@
     <string name="tab_inbox">Входящие</string>
     <string name="tab_topics">Темы</string>
     <string name="tab_board">Материал</string>
+    <string name="tab_practice">Практика</string>
+    <string name="tab_morning">Дневник</string>
 
     <!-- Входящие -->
     <string name="inbox_title">Входящие</string>
@@ -81,6 +83,29 @@
     <string name="hint_missing_act_out">Нет act-out. Упражнение 12: сыграй, а не рассказывай.</string>
     <string name="hint_stuck_in_draft">Черновик лежит без движения %1$d дней.</string>
     <string name="hint_unused_polished">Не выносилась на сцену %1$d дней. Вернуть в сет?</string>
+
+    <!-- Практика: 48 упражнений -->
+    <string name="practice_progress">Пройдено упражнений: %1$d из %2$d</string>
+    <string name="practice_numbered">%1$d. %2$s</string>
+    <string name="practice_untitled">Упражнение %1$d</string>
+    <string name="practice_page">Книга, стр. %1$d</string>
+    <string name="practice_title_missing">Название этого упражнения восстановить не удалось. Впиши его из книги — обновление приложения не сотрёт.</string>
+    <string name="practice_title_hint">Название из книги</string>
+    <string name="practice_title_save">Сохранить название</string>
+    <string name="practice_answer_hint">Твой ответ</string>
+    <string name="practice_answer_save">Сохранить ответ</string>
+    <string name="part_intro">Введение</string>
+    <string name="part_one">Часть 1. Разминка</string>
+    <string name="part_two">Часть 2. Мастерская</string>
+    <string name="part_three">Часть 3. Сцена</string>
+    <string name="part_four">Часть 4. Ещё материал</string>
+
+    <!-- Утренние страницы -->
+    <string name="morning_streak">Цепочка: %1$d дней подряд</string>
+    <string name="morning_timer">%1$02d:%2$02d</string>
+    <string name="morning_hint">Пиши не останавливаясь. Плохо — тоже нормально.</string>
+    <string name="morning_save">Сохранить и закрыть день</string>
+    <string name="morning_harvest">Это в материал</string>
 
     <!-- Перенос данных -->
     <string name="backup_title">Перенос данных</string>

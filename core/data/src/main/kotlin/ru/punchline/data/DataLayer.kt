@@ -8,6 +8,7 @@ import ru.punchline.data.repo.DateKeys
 import ru.punchline.data.repo.ExerciseCatalog
 import ru.punchline.data.repo.GigRepository
 import ru.punchline.data.repo.MutationSink
+import ru.punchline.data.repo.PracticeRepository
 import ru.punchline.data.repo.SetListRepository
 import ru.punchline.data.repo.StreakRepository
 import ru.punchline.data.repo.TopicRepository
@@ -65,6 +66,13 @@ class DataLayer(
     )
 
     val exercises = ExerciseCatalog(database.exercises())
+
+    val practice = PracticeRepository(
+        exercises = database.exercises(),
+        morning = database.morningWritings(),
+        sink = sink,
+        clock = clock,
+    )
 
     val vault = VaultService(
         context = appContext,

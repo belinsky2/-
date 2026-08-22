@@ -68,6 +68,7 @@ class AppContainer(context: Context) {
     val setLists get() = data.setLists
     val gigs get() = data.gigs
     val workshop get() = data.workshop
+    val practice get() = data.practice
     val streaks get() = data.streaks
     val vault get() = data.vault
     val sink get() = data.sink

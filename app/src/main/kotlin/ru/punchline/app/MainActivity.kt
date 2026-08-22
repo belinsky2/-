@@ -35,6 +35,10 @@ import ru.punchline.app.board.BoardScreen
 import ru.punchline.app.board.BoardViewModel
 import ru.punchline.app.inbox.InboxScreen
 import ru.punchline.app.inbox.InboxViewModel
+import ru.punchline.app.morning.MorningScreen
+import ru.punchline.app.morning.MorningViewModel
+import ru.punchline.app.practice.PracticeScreen
+import ru.punchline.app.practice.PracticeViewModel
 import ru.punchline.app.topics.TopicsScreen
 import ru.punchline.app.topics.TopicsViewModel
 import ru.punchline.app.workshop.BitWorkshopScreen
@@ -46,6 +50,8 @@ import ru.punchline.model.Id
 private const val ROUTE_INBOX = "inbox"
 private const val ROUTE_TOPICS = "topics"
 private const val ROUTE_BOARD = "board"
+private const val ROUTE_PRACTICE = "practice"
+private const val ROUTE_MORNING = "morning"
 private const val ROUTE_BACKUP = "backup"
 private const val ARG_ID = "id"
 private const val ROUTE_MINDMAP = "mindmap"
@@ -55,6 +61,8 @@ private enum class Tab(val route: String, val labelRes: Int) {
     INBOX(ROUTE_INBOX, R.string.tab_inbox),
     TOPICS(ROUTE_TOPICS, R.string.tab_topics),
     BOARD(ROUTE_BOARD, R.string.tab_board),
+    PRACTICE(ROUTE_PRACTICE, R.string.tab_practice),
+    MORNING(ROUTE_MORNING, R.string.tab_morning),
 }
 
 class MainActivity : ComponentActivity() {
@@ -128,6 +136,12 @@ private fun PunchlineApp(container: AppContainer) {
                     onOpenBit = { navController.navigate("$ROUTE_WORKSHOP/${it.value}") },
                 )
             }
+            composable(ROUTE_PRACTICE) {
+                PracticeScreen(viewModel = viewModel(factory = container.factory()))
+            }
+            composable(ROUTE_MORNING) {
+                MorningScreen(viewModel = viewModel(factory = container.factory()))
+            }
             composable(ROUTE_BACKUP) {
                 BackupScreen(viewModel = viewModel(factory = container.factory()))
             }
@@ -169,6 +183,12 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
 
                 modelClass.isAssignableFrom(BoardViewModel::class.java) ->
                     BoardViewModel(bits) as T
+
+                modelClass.isAssignableFrom(PracticeViewModel::class.java) ->
+                    PracticeViewModel(practice) as T
+
+                modelClass.isAssignableFrom(MorningViewModel::class.java) ->
+                    MorningViewModel(practice, streaks, bits) as T
 
                 modelClass.isAssignableFrom(BackupViewModel::class.java) ->
                     BackupViewModel(context, vault, sink) as T
