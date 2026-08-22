@@ -45,6 +45,12 @@ class SetListRepository(
             }
         }
 
+    /** Какие шутки стоят в этом сете и в каком порядке. Нужно разбору выступления. */
+    fun observeItemBitIds(setListId: Id): Flow<List<Id>> =
+        setLists.observeItems(setListId.value).map { items ->
+            items.sortedBy { it.order }.map { Id(it.bitId) }
+        }
+
     suspend fun create(title: String, targetDurationSec: Int): Id {
         val id = Id.generate(clock)
         setLists.upsert(

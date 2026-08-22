@@ -143,6 +143,19 @@
     <string name="stage_back">Назад</string>
     <string name="stage_finish">Закончил</string>
 
+    <!-- Разбор выступления -->
+    <string name="review_progress">Отмечено: %1$d из %2$d</string>
+    <string name="review_stats">Средняя реакция %1$s · смеха в минуту %2$s</string>
+    <string name="review_apply">Пересобрать акт по результатам</string>
+    <string name="review_done">Готово</string>
+    <string name="review_promotions">Движок изменил:</string>
+    <string name="review_promotion_line">%1$s → %2$s</string>
+    <string name="laugh_silence">Тишина</string>
+    <string name="laugh_chuckle">Хмык</string>
+    <string name="laugh_laugh">Смех</string>
+    <string name="laugh_big">Гогот</string>
+    <string name="laugh_applause">Аплодисменты</string>
+
     <!-- Перенос данных -->
     <string name="backup_title">Перенос данных</string>
     <string name="backup_explainer">Весь материал — тексты, аудио, история выступлений — выгружается в один файл. Положи его туда, откуда сможешь достать: смена телефона или потеря устройства иначе означает потерю всего.</string>

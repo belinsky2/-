@@ -39,6 +39,8 @@ import ru.punchline.app.morning.MorningScreen
 import ru.punchline.app.morning.MorningViewModel
 import ru.punchline.app.practice.PracticeScreen
 import ru.punchline.app.practice.PracticeViewModel
+import ru.punchline.app.review.GigReviewScreen
+import ru.punchline.app.review.GigReviewViewModel
 import ru.punchline.app.setlist.SetListDetailScreen
 import ru.punchline.app.setlist.SetListDetailViewModel
 import ru.punchline.app.setlist.SetListsScreen
@@ -61,6 +63,8 @@ private const val ROUTE_MORNING = "morning"
 private const val ROUTE_SETLISTS = "setlists"
 private const val ROUTE_SETLIST_DETAIL = "setlist"
 private const val ROUTE_STAGE = "stage"
+private const val ROUTE_REVIEW = "review"
+private const val ARG_SET_ID = "setId"
 private const val ROUTE_BACKUP = "backup"
 private const val ARG_ID = "id"
 private const val ROUTE_MINDMAP = "mindmap"
@@ -168,6 +172,19 @@ private fun PunchlineApp(container: AppContainer) {
                 StageScreen(
                     viewModel = viewModel(factory = container.factory(id)),
                     onExit = { navController.popBackStack() },
+                    onReview = { gig ->
+                        navController.navigate("$ROUTE_REVIEW/$gig/${id.value}") {
+                            popUpTo(ROUTE_SETLISTS)
+                        }
+                    },
+                )
+            }
+            composable("$ROUTE_REVIEW/{$ARG_ID}/{$ARG_SET_ID}") { entry ->
+                val gigId = Id(entry.arguments?.getString(ARG_ID).orEmpty())
+                val setId = Id(entry.arguments?.getString(ARG_SET_ID).orEmpty())
+                GigReviewScreen(
+                    viewModel = viewModel(factory = container.reviewFactory(gigId, setId)),
+                    onDone = { navController.popBackStack() },
                 )
             }
             composable(ROUTE_BACKUP) {
@@ -238,4 +255,12 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
 
                 else -> error("Unknown ViewModel: ${modelClass.name}")
             }
+    }
+
+/** У разбора выступления два аргумента, поэтому для него отдельная фабрика. */
+fun AppContainer.reviewFactory(gigId: Id, setListId: Id?): ViewModelProvider.Factory =
+    object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
+            GigReviewViewModel(gigs, setLists, bits, gigId, setListId) as T
     }

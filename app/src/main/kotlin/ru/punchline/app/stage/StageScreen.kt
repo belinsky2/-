@@ -44,7 +44,11 @@ import ru.punchline.model.GigType
  * переводит к следующему номеру.
  */
 @Composable
-fun StageScreen(viewModel: StageViewModel, onExit: () -> Unit) {
+fun StageScreen(
+    viewModel: StageViewModel,
+    onExit: () -> Unit,
+    onReview: (gigId: String) -> Unit,
+) {
     val cues by viewModel.cues.collectAsStateWithLifecycle()
     val index by viewModel.index.collectAsStateWithLifecycle()
     val gigId by viewModel.gigId.collectAsStateWithLifecycle()
@@ -115,7 +119,9 @@ fun StageScreen(viewModel: StageViewModel, onExit: () -> Unit) {
                     }
                     Button(onClick = {
                         viewModel.finish(elapsed, audioHash = null)
-                        onExit()
+                        // Сразу на разбор: отложенный разбор не делается никогда,
+                        // а без него данных о зале не появится.
+                        gigId?.let { onReview(it.value) } ?: onExit()
                     }) { Text(stringResource(R.string.stage_finish)) }
                 }
             }
