@@ -1,7 +1,5 @@
-package ru.punchline.data.repo
+package ru.punchline.model
 
-import ru.punchline.model.Bit
-import ru.punchline.model.BitStatus
 
 /**
  * Подписи для выгрузки. Приходят снаружи из строковых ресурсов: правило
