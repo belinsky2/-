@@ -135,6 +135,21 @@ interface BitPerformanceDao {
 }
 
 @Dao
+interface MindMapDao {
+    @Upsert suspend fun upsert(node: MindMapNodeEntity)
+    @Upsert suspend fun upsertAll(nodes: List<MindMapNodeEntity>)
+
+    @Query("SELECT * FROM mind_map_nodes WHERE topic_id = :topicId AND deleted_at IS NULL ORDER BY node_order")
+    fun observeForTopic(topicId: String): Flow<List<MindMapNodeEntity>>
+
+    @Query("SELECT * FROM mind_map_nodes WHERE topic_id = :topicId AND deleted_at IS NULL ORDER BY node_order")
+    suspend fun forTopic(topicId: String): List<MindMapNodeEntity>
+
+    @Query("SELECT * FROM mind_map_nodes WHERE id = :id")
+    suspend fun byId(id: String): MindMapNodeEntity?
+}
+
+@Dao
 interface RantDao {
     @Upsert suspend fun upsert(rant: RantEntity)
 

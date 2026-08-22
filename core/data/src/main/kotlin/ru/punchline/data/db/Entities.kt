@@ -111,6 +111,24 @@ data class BitPerformanceEntity(
     @Embedded val sync: SyncColumns,
 )
 
+/**
+ * Узел mind-map. Дерево, а не холст: методике важно ветвление ассоциаций,
+ * а не координаты на плоскости. Хранится [order] среди соседей, но не x и y —
+ * свободный холст сознательно вырезан из первой версии как самый дорогой
+ * экран проекта, а модель дерева от его появления не изменится.
+ */
+@Entity(tableName = "mind_map_nodes", indices = [Index("topic_id"), Index("parent_id")])
+data class MindMapNodeEntity(
+    @PrimaryKey val id: String,
+    @ColumnInfo(name = "topic_id") val topicId: String,
+    @ColumnInfo(name = "parent_id") val parentId: String?,
+    val text: String,
+    @ColumnInfo(name = "node_order") val order: Int,
+    /** Узел, из которого уже сделали шутку: повторно предлагать его не нужно. */
+    @ColumnInfo(name = "promoted_bit_id") val promotedBitId: String?,
+    @Embedded val sync: SyncColumns,
+)
+
 @Entity(tableName = "rants", indices = [Index("topic_id")])
 data class RantEntity(
     @PrimaryKey val id: String,

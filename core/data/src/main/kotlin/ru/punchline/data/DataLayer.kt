@@ -11,6 +11,7 @@ import ru.punchline.data.repo.MutationSink
 import ru.punchline.data.repo.SetListRepository
 import ru.punchline.data.repo.StreakRepository
 import ru.punchline.data.repo.TopicRepository
+import ru.punchline.data.repo.WorkshopRepository
 import ru.punchline.data.vault.VaultService
 import ru.punchline.model.Clock
 import ru.punchline.model.DeviceId
@@ -54,6 +55,14 @@ class DataLayer(
     val gigs = GigRepository(database.gigs(), database.performances(), database.bits(), sink, clock)
 
     val streaks = StreakRepository(database.streaks(), sink, clock, dateKeys)
+
+    val workshop = WorkshopRepository(
+        mindMap = database.mindMap(),
+        rants = database.rants(),
+        bits = database.bits(),
+        sink = sink,
+        clock = clock,
+    )
 
     val exercises = ExerciseCatalog(database.exercises())
 

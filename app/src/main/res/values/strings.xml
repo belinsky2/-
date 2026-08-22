@@ -2,6 +2,12 @@
 <resources>
     <string name="app_name">Панчлайн</string>
 
+    <!-- Нижняя навигация -->
+    <string name="tab_inbox">Входящие</string>
+    <string name="tab_topics">Темы</string>
+    <string name="tab_board">Материал</string>
+
+    <!-- Входящие -->
     <string name="inbox_title">Входящие</string>
     <string name="inbox_capture_hint">Что зацепило?</string>
     <string name="inbox_capture_action">Записать</string>
@@ -9,6 +15,74 @@
     <string name="inbox_open_backup">Перенос данных</string>
     <string name="inbox_open_backup_icon">⤓</string>
 
+    <!-- Темы -->
+    <string name="topics_add_hint">Тема — то, что бесит, пугает или не укладывается в голове</string>
+    <string name="topics_add_action">Добавить тему</string>
+    <string name="topics_passion">Сколько внутри злости: %1$d из 10</string>
+    <string name="topics_core">Главная</string>
+    <string name="topics_mind_map">Ассоциации</string>
+    <string name="topics_over_limit">Главных тем больше %1$d. Картер советует сузиться до трёх — но это твой выбор, не запрет.</string>
+    <string name="topics_over_limit_ok">Понятно</string>
+
+    <!-- Дерево ассоциаций -->
+    <string name="mindmap_branch_root">Новая ветка от корня</string>
+    <string name="mindmap_branch_of">Ветка от: %1$s</string>
+    <string name="mindmap_add_hint">Что приходит в голову?</string>
+    <string name="mindmap_add_action">Добавить</string>
+    <string name="mindmap_to_root">К корню</string>
+    <string name="mindmap_branch">Ветвить</string>
+    <string name="mindmap_promote">В шутку</string>
+    <string name="mindmap_delete">Убрать</string>
+    <string name="mindmap_already_bit">Уже в работе</string>
+
+    <!-- Мастерская -->
+    <string name="workshop_step_attitude">Отношение</string>
+    <string name="workshop_step_premise">Премиса</string>
+    <string name="workshop_step_punch">Панч</string>
+    <string name="workshop_step_actout">Act-out</string>
+    <string name="workshop_step_tags">Добивки</string>
+    <string name="workshop_attitude_question">Что тут главное: сложно, странно, страшно или тупо?</string>
+    <string name="workshop_premise_template">Закончи мысль: самое %1$s в этом — то, что…</string>
+    <string name="workshop_premise_no_attitude">Сначала выбери отношение — премиса растёт из него.</string>
+    <string name="workshop_punch_question">Чем добиваешь? Смешение, поворот или список из трёх.</string>
+    <string name="workshop_actout_question">Кого играешь? Не описывай — покажи.</string>
+    <string name="workshop_space_work">Есть работа с пространством</string>
+    <string name="workshop_tags_question">Добивки — короткие фразы после панча</string>
+    <string name="workshop_tag_add">Добавить добивку</string>
+    <string name="workshop_save">Сохранить</string>
+
+    <!-- Отношения -->
+    <string name="attitude_hard">сложное</string>
+    <string name="attitude_weird">странное</string>
+    <string name="attitude_scary">страшное</string>
+    <string name="attitude_stupid">тупое</string>
+
+    <!-- Техники панча -->
+    <string name="punch_mix">Смешение</string>
+    <string name="punch_turn">Поворот</string>
+    <string name="punch_list_of_three">Список из трёх</string>
+    <string name="punch_self_mocking">Самоирония</string>
+    <string name="punch_other">Другое</string>
+
+    <!-- Состояния шутки -->
+    <string name="status_seed">Зерно</string>
+    <string name="status_premise">Есть премиса</string>
+    <string name="status_draft">Черновик</string>
+    <string name="status_tested">Обкатана</string>
+    <string name="status_polished">В акте</string>
+    <string name="status_parked">Отложена</string>
+    <string name="status_retired">Списана</string>
+
+    <!-- Доска материала -->
+    <string name="board_empty">Материала пока нет. Начни с темы или поймай идею во входящих.</string>
+    <string name="board_scheduled">· в сете</string>
+    <string name="board_promotion">Заслужила: %1$s</string>
+    <string name="hint_rewrite_or_park">Тишина %1$d раза подряд. Переписать премису или отношение?</string>
+    <string name="hint_missing_act_out">Нет act-out. Упражнение 12: сыграй, а не рассказывай.</string>
+    <string name="hint_stuck_in_draft">Черновик лежит без движения %1$d дней.</string>
+    <string name="hint_unused_polished">Не выносилась на сцену %1$d дней. Вернуть в сет?</string>
+
+    <!-- Перенос данных -->
     <string name="backup_title">Перенос данных</string>
     <string name="backup_explainer">Весь материал — тексты, аудио, история выступлений — выгружается в один файл. Положи его туда, откуда сможешь достать: смена телефона или потеря устройства иначе означает потерю всего.</string>
     <string name="backup_export">Выгрузить всё в файл</string>

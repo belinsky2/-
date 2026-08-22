@@ -17,6 +17,7 @@ import androidx.room.TypeConverters
         SetListItemEntity::class,
         GigEntity::class,
         BitPerformanceEntity::class,
+        MindMapNodeEntity::class,
         RantEntity::class,
         MorningWritingEntity::class,
         StreakDayEntity::class,
@@ -36,6 +37,7 @@ abstract class PunchlineDatabase : RoomDatabase() {
     abstract fun setLists(): SetListDao
     abstract fun gigs(): GigDao
     abstract fun performances(): BitPerformanceDao
+    abstract fun mindMap(): MindMapDao
     abstract fun rants(): RantDao
     abstract fun morningWritings(): MorningWritingDao
     abstract fun streaks(): StreakDao
