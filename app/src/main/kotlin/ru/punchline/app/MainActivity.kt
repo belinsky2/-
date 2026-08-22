@@ -47,6 +47,8 @@ import ru.punchline.app.setlist.SetListsScreen
 import ru.punchline.app.setlist.SetListsViewModel
 import ru.punchline.app.stage.StageScreen
 import ru.punchline.app.stage.StageViewModel
+import ru.punchline.app.today.TodayScreen
+import ru.punchline.app.today.TodayViewModel
 import ru.punchline.app.topics.TopicsScreen
 import ru.punchline.app.topics.TopicsViewModel
 import ru.punchline.app.workshop.BitWorkshopScreen
@@ -55,6 +57,7 @@ import ru.punchline.app.workshop.MindMapScreen
 import ru.punchline.app.workshop.MindMapViewModel
 import ru.punchline.model.Id
 
+private const val ROUTE_TODAY = "today"
 private const val ROUTE_INBOX = "inbox"
 private const val ROUTE_TOPICS = "topics"
 private const val ROUTE_BOARD = "board"
@@ -71,6 +74,7 @@ private const val ROUTE_MINDMAP = "mindmap"
 private const val ROUTE_WORKSHOP = "workshop"
 
 private enum class Tab(val route: String, val labelRes: Int) {
+    TODAY(ROUTE_TODAY, R.string.tab_today),
     INBOX(ROUTE_INBOX, R.string.tab_inbox),
     TOPICS(ROUTE_TOPICS, R.string.tab_topics),
     BOARD(ROUTE_BOARD, R.string.tab_board),
@@ -129,9 +133,16 @@ private fun PunchlineApp(container: AppContainer) {
     ) { insets ->
         NavHost(
             navController = navController,
-            startDestination = ROUTE_INBOX,
+            startDestination = ROUTE_TODAY,
             modifier = Modifier.padding(insets),
         ) {
+            composable(ROUTE_TODAY) {
+                TodayScreen(
+                    viewModel = viewModel(factory = container.factory()),
+                    onOpenInbox = { navController.navigate(ROUTE_INBOX) },
+                    onOpenBackup = { navController.navigate(ROUTE_BACKUP) },
+                )
+            }
             composable(ROUTE_INBOX) {
                 InboxScreen(
                     viewModel = viewModel(factory = container.factory()),
@@ -220,6 +231,9 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
             when {
+                modelClass.isAssignableFrom(TodayViewModel::class.java) ->
+                    TodayViewModel(stats, bits, DEFAULT_GOAL_MINUTES) as T
+
                 modelClass.isAssignableFrom(InboxViewModel::class.java) ->
                     InboxViewModel(bits) as T
 
@@ -264,3 +278,9 @@ fun AppContainer.reviewFactory(gigId: Id, setListId: Id?): ViewModelProvider.Fac
         override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
             GigReviewViewModel(gigs, setLists, bits, gigId, setListId) as T
     }
+
+/**
+ * Цель по хронометражу до появления экрана настроек. Пять минут — стандартная
+ * длина открытого микрофона и первая осмысленная веха у Картер.
+ */
+private const val DEFAULT_GOAL_MINUTES = 5

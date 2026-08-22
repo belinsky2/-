@@ -3,6 +3,7 @@
     <string name="app_name">Панчлайн</string>
 
     <!-- Нижняя навигация -->
+    <string name="tab_today">Сегодня</string>
     <string name="tab_inbox">Входящие</string>
     <string name="tab_topics">Темы</string>
     <string name="tab_board">Материал</string>
@@ -84,6 +85,19 @@
     <string name="hint_missing_act_out">Нет act-out. Упражнение 12: сыграй, а не рассказывай.</string>
     <string name="hint_stuck_in_draft">Черновик лежит без движения %1$d дней.</string>
     <string name="hint_unused_polished">Не выносилась на сцену %1$d дней. Вернуть в сет?</string>
+
+    <!-- Сегодня -->
+    <string name="today_streak">🔥 %1$d дней подряд</string>
+    <string name="today_material">Готового материала: %1$d из %2$d мин</string>
+    <string name="today_gigs">Выступлений за 30 дней: %1$d</string>
+    <string name="today_inbox">Во входящих неразобранного: %1$d</string>
+    <string name="today_inbox_action">Разобрать</string>
+    <string name="today_bottleneck">Материал копится на этапе «%2$s»: %1$d шт. Здесь затык.</string>
+    <string name="today_attitudes">Отношения в материале</string>
+    <string name="today_act_out_ratio">С act-out: %1$d%%</string>
+    <string name="today_best">Что заходит лучше всего</string>
+    <string name="today_worst">Что тянет вниз</string>
+    <string name="today_backup">Перенос данных</string>
 
     <!-- Практика: 48 упражнений -->
     <string name="practice_progress">Пройдено упражнений: %1$d из %2$d</string>

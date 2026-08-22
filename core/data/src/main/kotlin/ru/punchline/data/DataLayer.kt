@@ -10,6 +10,7 @@ import ru.punchline.data.repo.GigRepository
 import ru.punchline.data.repo.MutationSink
 import ru.punchline.data.repo.PracticeRepository
 import ru.punchline.data.repo.SetListRepository
+import ru.punchline.data.repo.StatsRepository
 import ru.punchline.data.repo.StreakRepository
 import ru.punchline.data.repo.TopicRepository
 import ru.punchline.data.repo.WorkshopRepository
@@ -62,6 +63,14 @@ class DataLayer(
         rants = database.rants(),
         bits = database.bits(),
         sink = sink,
+        clock = clock,
+    )
+
+    val stats = StatsRepository(
+        bits = database.bits(),
+        performances = database.performances(),
+        gigs = database.gigs(),
+        streaks = streaks,
         clock = clock,
     )
 
