@@ -34,7 +34,11 @@ import ru.punchline.model.Topic
  * оценить, где внутри действительно есть злость, и оставить три главные.
  */
 @Composable
-fun TopicsScreen(viewModel: TopicsViewModel, onOpenMindMap: (Id) -> Unit) {
+fun TopicsScreen(
+    viewModel: TopicsViewModel,
+    onOpenMindMap: (Id) -> Unit,
+    onOpenRant: (Id) -> Unit,
+) {
     val topics by viewModel.all.collectAsStateWithLifecycle()
     val overLimit by viewModel.overLimit.collectAsStateWithLifecycle()
     var draft by remember { mutableStateOf("") }
@@ -76,6 +80,7 @@ fun TopicsScreen(viewModel: TopicsViewModel, onOpenMindMap: (Id) -> Unit) {
                     onPassion = { viewModel.setPassion(topic.id, it) },
                     onToggleCore = { viewModel.toggleCore(topic) },
                     onOpenMindMap = { onOpenMindMap(topic.id) },
+                    onOpenRant = { onOpenRant(topic.id) },
                 )
             }
         }
@@ -88,6 +93,7 @@ private fun TopicCard(
     onPassion: (Int) -> Unit,
     onToggleCore: () -> Unit,
     onOpenMindMap: () -> Unit,
+    onOpenRant: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -115,6 +121,9 @@ private fun TopicCard(
                 )
                 TextButton(onClick = onOpenMindMap) {
                     Text(stringResource(R.string.topics_mind_map))
+                }
+                TextButton(onClick = onOpenRant) {
+                    Text(stringResource(R.string.topics_rant))
                 }
             }
         }

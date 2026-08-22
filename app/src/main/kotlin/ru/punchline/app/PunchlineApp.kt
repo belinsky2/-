@@ -8,6 +8,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import ru.punchline.app.audio.AudioRecorder
 import ru.punchline.data.DataLayer
 import ru.punchline.data.repo.DateKeys
 import ru.punchline.model.Clock
@@ -70,6 +71,9 @@ class AppContainer(context: Context) {
     val workshop get() = data.workshop
     val practice get() = data.practice
     val stats get() = data.stats
+
+    /** Один рекордер на приложение: два одновременно всё равно не нужны. */
+    val recorder: AudioRecorder by lazy { AudioRecorder(context, data.blobs) }
     val streaks get() = data.streaks
     val vault get() = data.vault
     val sink get() = data.sink

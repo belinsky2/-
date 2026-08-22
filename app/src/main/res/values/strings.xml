@@ -25,6 +25,7 @@
     <string name="topics_passion">Сколько внутри злости: %1$d из 10</string>
     <string name="topics_core">Главная</string>
     <string name="topics_mind_map">Ассоциации</string>
+    <string name="topics_rant">Рант</string>
     <string name="topics_over_limit">Главных тем больше %1$d. Картер советует сузиться до трёх — но это твой выбор, не запрет.</string>
     <string name="topics_over_limit_ok">Понятно</string>
 
@@ -38,6 +39,16 @@
     <string name="mindmap_promote">В шутку</string>
     <string name="mindmap_delete">Убрать</string>
     <string name="mindmap_already_bit">Уже в работе</string>
+
+    <!-- Рант -->
+    <string name="rant_explainer">Говори про тему не останавливаясь: злись, ругайся, повторяйся. Текст потом, сейчас важно выговориться.</string>
+    <string name="rant_timer">%1$02d:%2$02d</string>
+    <string name="rant_start">Начать рант</string>
+    <string name="rant_stop">Стоп</string>
+    <string name="rant_saved">Записано, %1$d сек. Аудио сохранено.</string>
+    <string name="rant_nothing">Записать не вышло — проверь доступ к микрофону.</string>
+    <string name="rant_note_hint">Что зацепило в собственном ранте?</string>
+    <string name="rant_harvest">Это в материал</string>
 
     <!-- Мастерская -->
     <string name="workshop_step_attitude">Отношение</string>

@@ -55,6 +55,8 @@ import ru.punchline.app.workshop.BitWorkshopScreen
 import ru.punchline.app.workshop.BitWorkshopViewModel
 import ru.punchline.app.workshop.MindMapScreen
 import ru.punchline.app.workshop.MindMapViewModel
+import ru.punchline.app.workshop.RantScreen
+import ru.punchline.app.workshop.RantViewModel
 import ru.punchline.model.Id
 import ru.punchline.model.MarkdownLabels
 
@@ -73,6 +75,7 @@ private const val ROUTE_BACKUP = "backup"
 private const val ARG_ID = "id"
 private const val ROUTE_MINDMAP = "mindmap"
 private const val ROUTE_WORKSHOP = "workshop"
+private const val ROUTE_RANT = "rant"
 
 private enum class Tab(val route: String, val labelRes: Int) {
     TODAY(ROUTE_TODAY, R.string.tab_today),
@@ -154,6 +157,7 @@ private fun PunchlineApp(container: AppContainer) {
                 TopicsScreen(
                     viewModel = viewModel(factory = container.factory()),
                     onOpenMindMap = { navController.navigate("$ROUTE_MINDMAP/${it.value}") },
+                    onOpenRant = { navController.navigate("$ROUTE_RANT/${it.value}") },
                 )
             }
             composable(ROUTE_BOARD) {
@@ -205,6 +209,10 @@ private fun PunchlineApp(container: AppContainer) {
             composable("$ROUTE_MINDMAP/{$ARG_ID}") { entry ->
                 val topicId = Id(entry.arguments?.getString(ARG_ID).orEmpty())
                 MindMapScreen(viewModel = viewModel(factory = container.factory(topicId)))
+            }
+            composable("$ROUTE_RANT/{$ARG_ID}") { entry ->
+                val topicId = Id(entry.arguments?.getString(ARG_ID).orEmpty())
+                RantScreen(viewModel = viewModel(factory = container.factory(topicId)))
             }
             composable("$ROUTE_WORKSHOP/{$ARG_ID}") { entry ->
                 val bitId = Id(entry.arguments?.getString(ARG_ID).orEmpty())
@@ -264,6 +272,9 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
 
                 modelClass.isAssignableFrom(MindMapViewModel::class.java) ->
                     MindMapViewModel(workshop, requireNotNull(argument)) as T
+
+                modelClass.isAssignableFrom(RantViewModel::class.java) ->
+                    RantViewModel(workshop, recorder, argument) as T
 
                 modelClass.isAssignableFrom(BitWorkshopViewModel::class.java) ->
                     BitWorkshopViewModel(bits, requireNotNull(argument)) as T

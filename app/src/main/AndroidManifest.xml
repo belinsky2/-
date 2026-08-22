@@ -7,6 +7,12 @@
       стороннее приложение, — самому «Панчлайну» сеть не нужна.
     -->
 
+    <!--
+      Единственное разрешение приложения: стендап пишется вслух, и рант
+      с act-out записываются диктофоном. Аудио остаётся на устройстве.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <application
         android:name=".PunchlineApp"
         android:allowBackup="false"
