@@ -40,6 +40,17 @@ android {
     }
 
     signingConfigs {
+        // Постоянный debug-ключ вместо того, что Android-плагин генерирует сам.
+        // На чистой машине сборки он создаётся заново каждый раз, подпись
+        // не совпадает с уже установленной версией, и обновление отклоняется
+        // сообщением «Приложение не установлено».
+        getByName("debug") {
+            storeFile = rootProject.file("app/debug-signing.jks")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+
         if (hasReleaseSigning) {
             create("release") {
                 storeFile = rootProject.file(releaseStoreFile!!)
