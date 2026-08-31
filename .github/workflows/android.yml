@@ -7,7 +7,9 @@ on:
 
 concurrency:
   group: android-${{ github.ref }}
-  cancel-in-progress: true
+  # Не отменяем идущую сборку: Android локально не компилируется, и каждый
+  # прогон — единственный источник правды о том, собирается ли этап.
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -55,6 +57,19 @@ jobs:
             echo "::warning::Секрет PUNCHLINE_KEYSTORE_BASE64 не задан — APK выйдет неподписанным и не установится."
           fi
 
+      # Debug-сборка подписывается ключом, который AGP генерирует сам,
+      # и ставится без каких-либо секретов. Это отдельное приложение
+      # (суффикс .debug), поэтому оно не конфликтует с релизным и не мешает
+      # правилу «релиз подписан одним ключом на всю жизнь».
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: punchline-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
       - name: Build release APK
         env:
           PUNCHLINE_KEYSTORE_FILE: punchline-release.jks
@@ -83,11 +98,13 @@ jobs:
           {
             echo "### Сборка «Панчлайн»"
             echo
+            echo "**punchline-debug-apk** — ставится сразу, без секретов. Для проверки."
+            echo
             if [ "${{ steps.signing.outputs.signed }}" = "true" ]; then
-              echo "APK подписан релизным ключом — можно ставить на телефон."
+              echo "**punchline-release-apk** — подписан релизным ключом. Рабочая установка."
             else
-              echo "**APK не подписан и не установится.** Добавь секреты репозитория:"
-              echo "\`PUNCHLINE_KEYSTORE_BASE64\`, \`PUNCHLINE_KEYSTORE_PASSWORD\`,"
+              echo "Релизный APK не подписан и не установится. Чтобы получить рабочий,"
+              echo "добавь секреты: \`PUNCHLINE_KEYSTORE_BASE64\`, \`PUNCHLINE_KEYSTORE_PASSWORD\`,"
               echo "\`PUNCHLINE_KEY_ALIAS\`, \`PUNCHLINE_KEY_PASSWORD\`."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
