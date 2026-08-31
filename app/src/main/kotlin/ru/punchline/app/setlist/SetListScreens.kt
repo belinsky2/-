@@ -162,6 +162,18 @@ fun SetListDetailScreen(viewModel: SetListDetailViewModel) {
             )
         }
 
+        if (candidates.isEmpty()) {
+            item {
+                // Пустой список без объяснения выглядит как поломка.
+                // Причина всегда одна: материал ещё не дошёл до черновика.
+                Text(
+                    text = stringResource(R.string.setlist_no_candidates),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
+            }
+        }
+
         items(candidates, key = { "cand-" + it.bit.id.value }) { candidate ->
             Card(
                 modifier = Modifier

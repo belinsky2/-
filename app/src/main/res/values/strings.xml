@@ -65,6 +65,12 @@
     <string name="workshop_tags_question">Добивки — короткие фразы после панча</string>
     <string name="workshop_tag_add">Добавить добивку</string>
     <string name="workshop_save">Сохранить</string>
+    <string name="workshop_save_short">ОК</string>
+    <string name="workshop_saved">Сохранено</string>
+    <string name="workshop_title_hint">О чём шутка</string>
+    <string name="workshop_step_done">%1$s ✓</string>
+    <string name="workshop_tags_empty">Пока ни одной. Добивка — короткая фраза, которую бросаешь вслед панчу.</string>
+    <string name="workshop_tag_remove">%1$s ✕</string>
 
     <!-- Отношения -->
     <string name="attitude_hard">сложное</string>
@@ -89,7 +95,9 @@
     <string name="status_retired">Списана</string>
 
     <!-- Доска материала -->
-    <string name="board_empty">Материала пока нет. Начни с темы или поймай идею во входящих.</string>
+    <string name="board_empty">Пока пусто. Запиши шутку выше, или поймай идею во входящих, или разбери тему на ассоциации.</string>
+    <string name="board_new_hint">Новая шутка — о чём она?</string>
+    <string name="board_new_action">Добавить шутку</string>
     <string name="board_scheduled">· в сете</string>
     <string name="board_promotion">Заслужила: %1$s</string>
     <string name="hint_rewrite_or_park">Тишина %1$d раза подряд. Переписать премису или отношение?</string>
@@ -147,6 +155,7 @@
     <string name="setlist_role">Роль</string>
     <string name="setlist_remove">Убрать</string>
     <string name="setlist_candidates">Что можно добавить</string>
+    <string name="setlist_no_candidates">Добавлять пока нечего. В сет попадают шутки от черновика и выше — то есть у которых есть отношение, премиса и панч. Доведи хотя бы одну в мастерской.</string>
     <string name="role_opener">Открытие</string>
     <string name="role_body">Тело</string>
     <string name="role_closer">Закрытие</string>
@@ -181,9 +190,25 @@
     <string name="laugh_big">Гогот</string>
     <string name="laugh_applause">Аплодисменты</string>
 
+    <!-- Отмена действий -->
+    <string name="undo_action">Отменить</string>
+    <string name="undo_attitude">Отношение: %1$s</string>
+    <string name="undo_premise">Премиса изменена</string>
+    <string name="undo_punch">Панч: %1$s</string>
+    <string name="undo_act_out">Act-out изменён</string>
+    <string name="undo_tag_added">Добивка «%1$s» добавлена</string>
+    <string name="undo_tag_removed">Добивка «%1$s» убрана</string>
+    <string name="undo_title">Название: «%1$s»</string>
+    <string name="undo_bit_created">Шутка «%1$s» создана</string>
+    <string name="undo_bit_deleted">Шутка «%1$s» удалена</string>
+    <string name="undo_status">Статус: %1$s</string>
+    <string name="undo_topic_added">Тема «%1$s» добавлена</string>
+    <string name="undo_topic_deleted">Тема «%1$s» удалена</string>
+
     <!-- Перенос данных -->
     <string name="backup_title">Перенос данных</string>
     <string name="backup_explainer">Весь материал — тексты, аудио, история выступлений — выгружается в один файл. Положи его туда, откуда сможешь достать: смена телефона или потеря устройства иначе означает потерю всего.</string>
+    <string name="backup_dont_open">Этот файл не нужно открывать и распаковывать — внутри служебные данные, читать их вручную незачем. Он нужен ровно для одного: вернуть всё обратно кнопкой «Восстановить из файла». Чтобы прочитать материал глазами, есть выгрузка в Markdown.</string>
     <string name="backup_export">Выгрузить всё в файл</string>
     <string name="backup_exported">Готово. Файл сохранён.</string>
     <string name="backup_export_markdown">Выгрузить текст в Markdown</string>

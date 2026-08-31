@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import ru.punchline.app.undo.UndoBus
+import ru.punchline.app.undo.UndoLabel
 import ru.punchline.data.repo.BitRepository
 import ru.punchline.model.ActOut
 import ru.punchline.model.Attitude
@@ -23,6 +25,7 @@ enum class WorkshopStep { ATTITUDE, PREMISE, PUNCH, ACT_OUT, TAGS }
 
 class BitWorkshopViewModel(
     private val bits: BitRepository,
+    private val undo: UndoBus,
     private val bitId: Id,
 ) : ViewModel() {
 
@@ -32,13 +35,23 @@ class BitWorkshopViewModel(
     private val _step = MutableStateFlow(WorkshopStep.ATTITUDE)
     val step: StateFlow<WorkshopStep> = _step.asStateFlow()
 
-    init { reload() }
+    init { load(chooseStep = true) }
 
-    private fun reload() {
+    /**
+     * [chooseStep] выставляется только при первом открытии.
+     *
+     * Раньше шаг пересчитывался после каждой правки, и сохранение добивки
+     * отбрасывало пользователя на шаг «Act-out» — выглядело так, будто
+     * ничего не сохранилось. Экран не должен уводить с того места,
+     * где человек сейчас работает.
+     */
+    private fun load(chooseStep: Boolean = false) {
         viewModelScope.launch {
             val loaded = bits.byId(bitId)
             _bit.value = loaded
-            _step.value = loaded?.let(::firstUnfinishedStep) ?: WorkshopStep.ATTITUDE
+            if (chooseStep) {
+                _step.value = loaded?.let(::firstUnfinishedStep) ?: WorkshopStep.ATTITUDE
+            }
         }
     }
 
@@ -53,24 +66,48 @@ class BitWorkshopViewModel(
 
     fun goTo(step: WorkshopStep) { _step.value = step }
 
-    fun setAttitude(attitude: Attitude) = edit { bits.setAttitude(bitId, attitude) }
+    fun setTitle(title: String) =
+        edit(UndoLabel.TitleSet(title)) { bits.setTitle(bitId, title.trim()) }
 
-    fun setPremise(text: String) = edit { bits.setPremise(bitId, text) }
+    fun setAttitude(attitude: Attitude) =
+        edit(UndoLabel.AttitudeSet(attitude)) { bits.setAttitude(bitId, attitude) }
+
+    fun setPremise(text: String) =
+        edit(UndoLabel.PremiseSet) { bits.setPremise(bitId, text) }
 
     fun setPunch(text: String, technique: PunchTechnique) =
-        edit { bits.setPunch(bitId, Punch(text, technique)) }
+        edit(UndoLabel.PunchSet(technique)) { bits.setPunch(bitId, Punch(text, technique)) }
 
     fun setActOut(text: String, hasSpaceWork: Boolean, audioHash: String?) =
-        edit { bits.setActOut(bitId, ActOut(text, hasSpaceWork, audioHash)) }
+        edit(UndoLabel.ActOutSet) { bits.setActOut(bitId, ActOut(text, hasSpaceWork, audioHash)) }
 
-    fun setTags(tags: List<String>) = edit {
-        bits.update(bitId) { it.copy(elements = it.elements.copy(tags = tags)) }
+    fun addTag(tag: String) {
+        val clean = tag.trim()
+        if (clean.isBlank()) return
+        edit(UndoLabel.TagAdded(clean)) {
+            bits.setTags(bitId, (_bit.value?.elements?.tags.orEmpty()) + clean)
+        }
     }
 
-    private fun edit(block: suspend () -> Unit) {
+    fun removeTag(tag: String) = edit(UndoLabel.TagRemoved(tag)) {
+        bits.setTags(bitId, (_bit.value?.elements?.tags.orEmpty()) - tag)
+    }
+
+    /**
+     * Любая правка выполняется, перечитывается и кладёт в шину отмены способ
+     * вернуть прежнее состояние. Если менять было нечего, подсказка не всплывает:
+     * сообщать об отмене того, чего не произошло, — обман.
+     */
+    private fun edit(label: UndoLabel, block: suspend () -> Bit?) {
         viewModelScope.launch {
-            block()
-            reload()
+            val previous = block()
+            load()
+            if (previous != null) {
+                undo.push(label) {
+                    bits.restore(previous)
+                    load()
+                }
+            }
         }
     }
 }

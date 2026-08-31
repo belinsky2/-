@@ -9,10 +9,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
@@ -58,6 +65,9 @@ import ru.punchline.app.workshop.MindMapViewModel
 import ru.punchline.app.workshop.RantScreen
 import ru.punchline.app.workshop.RantViewModel
 import ru.punchline.model.Id
+import kotlinx.coroutines.launch
+import ru.punchline.app.undo.UndoLabel
+import ru.punchline.app.undo.text
 import ru.punchline.model.MarkdownLabels
 
 private const val ROUTE_TODAY = "today"
@@ -109,7 +119,11 @@ private fun PunchlineApp(container: AppContainer) {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination
 
+    val snackbars = remember { SnackbarHostState() }
+    UndoHost(container, snackbars)
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbars) },
         bottomBar = {
             // Панель прячется на вложенных экранах: в мастерской и в дереве
             // ассоциаций она только отвлекает от одной текущей задачи.
@@ -223,6 +237,51 @@ private fun PunchlineApp(container: AppContainer) {
 }
 
 /**
+ * Показывает подсказку об отмене поверх любого экрана.
+ *
+ * Отмена привязана к действию, а не висит отдельной кнопкой в углу:
+ * постоянная кнопка заставляет гадать, что именно она откатит. Здесь же
+ * в тексте написано ровно то, что будет отменено, и подсказка исчезает,
+ * когда отменять уже поздно.
+ */
+@Composable
+private fun UndoHost(container: AppContainer, snackbars: SnackbarHostState) {
+    val scope = rememberCoroutineScope()
+    var pending by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf<UndoLabel?>(null)
+    }
+    var undoBlock by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf<(suspend () -> Unit)?>(null)
+    }
+
+    LaunchedEffect(Unit) {
+        container.undo.actions.collect { action ->
+            pending = action.label
+            undoBlock = action.undo
+        }
+    }
+
+    val label = pending
+    val block = undoBlock
+    if (label != null && block != null) {
+        val message = label.text()
+        val actionLabel = stringResource(R.string.undo_action)
+        LaunchedEffect(label, block) {
+            val result = snackbars.showSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                duration = SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                scope.launch { block() }
+            }
+            pending = null
+            undoBlock = null
+        }
+    }
+}
+
+/**
  * Тёмная схема по умолчанию: приложение открывают в тёмном зале перед выходом,
  * и светлый экран там слепит и автора, и первый ряд.
  */
@@ -250,7 +309,7 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
                     TopicsViewModel(topics) as T
 
                 modelClass.isAssignableFrom(BoardViewModel::class.java) ->
-                    BoardViewModel(bits) as T
+                    BoardViewModel(bits, undo) as T
 
                 modelClass.isAssignableFrom(PracticeViewModel::class.java) ->
                     PracticeViewModel(practice) as T
@@ -277,7 +336,7 @@ fun AppContainer.factory(argument: Id? = null): ViewModelProvider.Factory =
                     RantViewModel(workshop, recorder, argument) as T
 
                 modelClass.isAssignableFrom(BitWorkshopViewModel::class.java) ->
-                    BitWorkshopViewModel(bits, requireNotNull(argument)) as T
+                    BitWorkshopViewModel(bits, undo, requireNotNull(argument)) as T
 
                 else -> error("Unknown ViewModel: ${modelClass.name}")
             }

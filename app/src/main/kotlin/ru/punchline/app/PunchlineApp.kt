@@ -9,6 +9,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import ru.punchline.app.audio.AudioRecorder
+import ru.punchline.app.undo.UndoBus
 import ru.punchline.data.DataLayer
 import ru.punchline.data.repo.DateKeys
 import ru.punchline.model.Clock
@@ -74,6 +75,9 @@ class AppContainer(context: Context) {
 
     /** Один рекордер на приложение: два одновременно всё равно не нужны. */
     val recorder: AudioRecorder by lazy { AudioRecorder(context, data.blobs) }
+
+    /** Одна шина отмены на приложение: подсказка показывается поверх любого экрана. */
+    val undo: UndoBus = UndoBus()
     val streaks get() = data.streaks
     val vault get() = data.vault
     val sink get() = data.sink

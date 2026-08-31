@@ -51,6 +51,11 @@ fun BackupScreen(viewModel: BackupViewModel) {
             style = MaterialTheme.typography.bodyMedium,
         )
 
+        Text(
+            text = stringResource(R.string.backup_dont_open),
+            style = MaterialTheme.typography.bodySmall,
+        )
+
         Button(
             onClick = { createDocument.launch(defaultFileName()) },
             modifier = Modifier.fillMaxWidth(),
@@ -120,7 +125,7 @@ private const val MIME_ANY = "application/octet-stream"
 private const val MIME_MARKDOWN = "text/markdown"
 
 private fun defaultFileName(): String =
-    "punchline-" + java.time.LocalDate.now() + ".zip"
+    "punchline-backup-" + java.time.LocalDate.now() + ".zip"
 
 private fun markdownFileName(): String =
     "punchline-" + java.time.LocalDate.now() + ".md"

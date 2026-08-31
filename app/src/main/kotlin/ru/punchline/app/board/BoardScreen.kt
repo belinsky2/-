@@ -10,11 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,20 +34,40 @@ import ru.punchline.model.Id
 @Composable
 fun BoardScreen(viewModel: BoardViewModel, onOpenBit: (Id) -> Unit) {
     val cards by viewModel.inProgress.collectAsStateWithLifecycle()
+    var draft by remember { mutableStateOf("") }
 
-    if (cards.isEmpty()) {
-        Column(Modifier.fillMaxSize().padding(32.dp)) {
-            Text(stringResource(R.string.board_empty))
-        }
-        return
-    }
-
-    LazyColumn(
+    Column(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(cards, key = { it.bit.id.value }) { card ->
-            BitRow(card, onClick = { onOpenBit(card.bit.id) })
+        // Поле создания вверху, а не кнопка-плюс: на доске материала главное
+        // действие — записать новую шутку, и оно не должно прятаться.
+        OutlinedTextField(
+            value = draft,
+            onValueChange = { draft = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.board_new_hint)) },
+        )
+        Button(
+            onClick = {
+                viewModel.create(draft) { onOpenBit(it) }
+                draft = ""
+            },
+            enabled = draft.isNotBlank(),
+        ) { Text(stringResource(R.string.board_new_action)) }
+
+        if (cards.isEmpty()) {
+            Text(
+                text = stringResource(R.string.board_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 24.dp),
+            )
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(cards, key = { it.bit.id.value }) { card ->
+                    BitRow(card, onClick = { onOpenBit(card.bit.id) })
+                }
+            }
         }
     }
 }

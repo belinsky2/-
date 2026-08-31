@@ -25,7 +25,15 @@ TOP_LEVEL = re.compile(
     r"(?:public |internal |private |abstract |open |sealed |data |value |enum |annotation |fun )*"
     r"(?:class|interface|object|typealias)\s+(\w+)"
 )
-TOP_FUN_OR_VAL = re.compile(r"^(?:public |internal )?(?:fun|val|const val)\s+(?:<[^>]+>\s+)?(\w+)")
+# Функции-расширения объявляются как `fun Receiver.name(...)`: без учёта
+# получателя проверка считала объявленным имя типа, а не функции, и потом
+# ругалась на совершенно корректный импорт.
+TOP_FUN_OR_VAL = re.compile(
+    r"^(?:public |internal )?(?:fun|val|const val)\s+"
+    r"(?:<[^>]+>\s+)?"          # обобщённые параметры
+    r"(?:[\w.<>?, ]+\.)?"       # получатель расширения
+    r"(\w+)"
+)
 
 for path in ROOT.rglob("*.kt"):
     if "/build/" in str(path):

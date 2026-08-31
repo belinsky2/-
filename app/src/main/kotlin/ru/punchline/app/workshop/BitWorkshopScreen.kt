@@ -3,6 +3,7 @@ package ru.punchline.app.workshop
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.punchline.app.R
+import ru.punchline.app.undo.labelRes
 import ru.punchline.model.Attitude
 import ru.punchline.model.Bit
 import ru.punchline.model.PunchTechnique
@@ -45,9 +47,9 @@ fun BitWorkshopScreen(viewModel: BitWorkshopViewModel) {
         modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(current.title, style = MaterialTheme.typography.titleLarge)
+        TitleField(current, viewModel)
 
-        StepBar(current = step, onSelect = viewModel::goTo)
+        StepBar(current = step, bit = current, onSelect = viewModel::goTo)
 
         when (step) {
             WorkshopStep.ATTITUDE -> AttitudeStep(current, viewModel)
@@ -59,17 +61,50 @@ fun BitWorkshopScreen(viewModel: BitWorkshopViewModel) {
     }
 }
 
+/** Название правится прямо здесь: заголовок шутки — тоже часть работы над ней. */
 @Composable
-private fun StepBar(current: WorkshopStep, onSelect: (WorkshopStep) -> Unit) {
+private fun TitleField(bit: Bit, viewModel: BitWorkshopViewModel) {
+    var title by remember(bit.id, bit.title) { mutableStateOf(bit.title) }
+    OutlinedTextField(
+        value = title,
+        onValueChange = { title = it },
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(stringResource(R.string.workshop_title_hint)) },
+        singleLine = false,
+        trailingIcon = {
+            if (title.trim() != bit.title) {
+                Button(onClick = { viewModel.setTitle(title) }) {
+                    Text(stringResource(R.string.workshop_save_short))
+                }
+            }
+        },
+    )
+}
+
+/**
+ * Полоса шагов. У пройденных стоит галочка — иначе непонятно, что уже сделано,
+ * а что нет, и приходится заходить в каждый шаг, чтобы это выяснить.
+ */
+@Composable
+private fun StepBar(current: WorkshopStep, bit: Bit, onSelect: (WorkshopStep) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         WorkshopStep.entries.forEach { step ->
+            val done = step.isFilled(bit)
             FilterChip(
                 selected = step == current,
                 onClick = { onSelect(step) },
-                label = { Text(stringResource(step.labelRes())) },
+                label = {
+                    Text(
+                        if (done) {
+                            stringResource(R.string.workshop_step_done, stringResource(step.labelRes()))
+                        } else {
+                            stringResource(step.labelRes())
+                        }
+                    )
+                },
             )
         }
     }
@@ -78,9 +113,17 @@ private fun StepBar(current: WorkshopStep, onSelect: (WorkshopStep) -> Unit) {
 @Composable
 private fun AttitudeStep(bit: Bit, viewModel: BitWorkshopViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.workshop_attitude_question),
-            style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.workshop_attitude_question),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        // FlowRow, а не Row: четыре слова не помещаются в ширину телефона,
+        // и последний чип сжимался до столбика из букв.
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Attitude.entries.forEach { attitude ->
                 FilterChip(
                     selected = bit.attitude == attitude,
@@ -94,12 +137,16 @@ private fun AttitudeStep(bit: Bit, viewModel: BitWorkshopViewModel) {
 
 @Composable
 private fun PremiseStep(bit: Bit, viewModel: BitWorkshopViewModel) {
-    var text by remember(bit.id) { mutableStateOf(bit.elements.premise.orEmpty()) }
+    var text by remember(bit.id, bit.elements.premise) {
+        mutableStateOf(bit.elements.premise.orEmpty())
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Подсказка-шаблон из методики: премиса — это всегда «самое X в Y».
         Text(
             text = bit.attitude
-                ?.let { stringResource(R.string.workshop_premise_template, stringResource(it.labelRes())) }
+                ?.let {
+                    stringResource(R.string.workshop_premise_template, stringResource(it.labelRes()))
+                }
                 ?: stringResource(R.string.workshop_premise_no_attitude),
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -109,24 +156,30 @@ private fun PremiseStep(bit: Bit, viewModel: BitWorkshopViewModel) {
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
         )
-        Button(onClick = { viewModel.setPremise(text) }, enabled = text.isNotBlank()) {
-            Text(stringResource(R.string.workshop_save))
-        }
+        SaveButton(
+            changed = text.trim() != bit.elements.premise.orEmpty().trim(),
+            enabled = text.isNotBlank(),
+        ) { viewModel.setPremise(text.trim()) }
     }
 }
 
 @Composable
 private fun PunchStep(bit: Bit, viewModel: BitWorkshopViewModel) {
-    var text by remember(bit.id) { mutableStateOf(bit.elements.punch?.text.orEmpty()) }
-    var technique by remember(bit.id) {
+    var text by remember(bit.id, bit.elements.punch?.text) {
+        mutableStateOf(bit.elements.punch?.text.orEmpty())
+    }
+    var technique by remember(bit.id, bit.elements.punch?.technique) {
         mutableStateOf(bit.elements.punch?.technique ?: PunchTechnique.TURN)
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.workshop_punch_question),
-            style = MaterialTheme.typography.bodyMedium)
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
+        Text(
+            stringResource(R.string.workshop_punch_question),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             PunchTechnique.entries.forEach { option ->
                 FilterChip(
@@ -142,21 +195,27 @@ private fun PunchStep(bit: Bit, viewModel: BitWorkshopViewModel) {
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
         )
-        Button(onClick = { viewModel.setPunch(text, technique) }, enabled = text.isNotBlank()) {
-            Text(stringResource(R.string.workshop_save))
-        }
+        SaveButton(
+            changed = text.trim() != bit.elements.punch?.text.orEmpty().trim() ||
+                technique != bit.elements.punch?.technique,
+            enabled = text.isNotBlank(),
+        ) { viewModel.setPunch(text.trim(), technique) }
     }
 }
 
 @Composable
 private fun ActOutStep(bit: Bit, viewModel: BitWorkshopViewModel) {
-    var text by remember(bit.id) { mutableStateOf(bit.elements.actOut?.text.orEmpty()) }
-    var spaceWork by remember(bit.id) {
+    var text by remember(bit.id, bit.elements.actOut?.text) {
+        mutableStateOf(bit.elements.actOut?.text.orEmpty())
+    }
+    var spaceWork by remember(bit.id, bit.elements.actOut?.hasSpaceWork) {
         mutableStateOf(bit.elements.actOut?.hasSpaceWork ?: false)
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.workshop_actout_question),
-            style = MaterialTheme.typography.bodyMedium)
+        Text(
+            stringResource(R.string.workshop_actout_question),
+            style = MaterialTheme.typography.bodyMedium,
+        )
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },
@@ -167,12 +226,11 @@ private fun ActOutStep(bit: Bit, viewModel: BitWorkshopViewModel) {
             Checkbox(checked = spaceWork, onCheckedChange = { spaceWork = it })
             Text(stringResource(R.string.workshop_space_work))
         }
-        Button(
-            onClick = {
-                viewModel.setActOut(text, spaceWork, bit.elements.actOut?.audioHash)
-            },
+        SaveButton(
+            changed = text.trim() != bit.elements.actOut?.text.orEmpty().trim() ||
+                spaceWork != (bit.elements.actOut?.hasSpaceWork ?: false),
             enabled = text.isNotBlank(),
-        ) { Text(stringResource(R.string.workshop_save)) }
+        ) { viewModel.setActOut(text.trim(), spaceWork, bit.elements.actOut?.audioHash) }
     }
 }
 
@@ -180,16 +238,27 @@ private fun ActOutStep(bit: Bit, viewModel: BitWorkshopViewModel) {
 private fun TagsStep(bit: Bit, viewModel: BitWorkshopViewModel) {
     var draft by remember(bit.id) { mutableStateOf("") }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.workshop_tags_question),
-            style = MaterialTheme.typography.bodyMedium)
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            bit.elements.tags.forEach { tag ->
-                AssistChip(onClick = {
-                    viewModel.setTags(bit.elements.tags - tag)
-                }, label = { Text(tag) })
+        Text(
+            stringResource(R.string.workshop_tags_question),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        if (bit.elements.tags.isEmpty()) {
+            Text(
+                stringResource(R.string.workshop_tags_empty),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                bit.elements.tags.forEach { tag ->
+                    AssistChip(
+                        onClick = { viewModel.removeTag(tag) },
+                        label = { Text(stringResource(R.string.workshop_tag_remove, tag)) },
+                    )
+                }
             }
         }
         OutlinedTextField(
@@ -198,13 +267,32 @@ private fun TagsStep(bit: Bit, viewModel: BitWorkshopViewModel) {
             modifier = Modifier.fillMaxWidth(),
         )
         Button(
-            onClick = {
-                viewModel.setTags(bit.elements.tags + draft.trim())
-                draft = ""
-            },
+            onClick = { viewModel.addTag(draft); draft = "" },
             enabled = draft.isNotBlank(),
         ) { Text(stringResource(R.string.workshop_tag_add)) }
     }
+}
+
+/**
+ * Кнопка сохранения меняет текст, когда сохранять нечего. Раньше она выглядела
+ * одинаково всегда, и было непонятно, сохранилось ли что-нибудь вообще.
+ */
+@Composable
+private fun SaveButton(changed: Boolean, enabled: Boolean, onSave: () -> Unit) {
+    Button(onClick = onSave, enabled = enabled && changed) {
+        Text(
+            if (changed) stringResource(R.string.workshop_save)
+            else stringResource(R.string.workshop_saved)
+        )
+    }
+}
+
+private fun WorkshopStep.isFilled(bit: Bit): Boolean = when (this) {
+    WorkshopStep.ATTITUDE -> bit.attitude != null
+    WorkshopStep.PREMISE -> !bit.elements.premise.isNullOrBlank()
+    WorkshopStep.PUNCH -> bit.elements.punch != null
+    WorkshopStep.ACT_OUT -> bit.elements.actOut != null
+    WorkshopStep.TAGS -> bit.elements.tags.isNotEmpty()
 }
 
 private fun WorkshopStep.labelRes(): Int = when (this) {
@@ -213,19 +301,4 @@ private fun WorkshopStep.labelRes(): Int = when (this) {
     WorkshopStep.PUNCH -> R.string.workshop_step_punch
     WorkshopStep.ACT_OUT -> R.string.workshop_step_actout
     WorkshopStep.TAGS -> R.string.workshop_step_tags
-}
-
-private fun Attitude.labelRes(): Int = when (this) {
-    Attitude.HARD -> R.string.attitude_hard
-    Attitude.WEIRD -> R.string.attitude_weird
-    Attitude.SCARY -> R.string.attitude_scary
-    Attitude.STUPID -> R.string.attitude_stupid
-}
-
-private fun PunchTechnique.labelRes(): Int = when (this) {
-    PunchTechnique.MIX -> R.string.punch_mix
-    PunchTechnique.TURN -> R.string.punch_turn
-    PunchTechnique.LIST_OF_THREE -> R.string.punch_list_of_three
-    PunchTechnique.SELF_MOCKING -> R.string.punch_self_mocking
-    PunchTechnique.OTHER -> R.string.punch_other
 }

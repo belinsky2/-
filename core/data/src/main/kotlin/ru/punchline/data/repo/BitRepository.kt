@@ -76,6 +76,14 @@ class BitRepository(
         }
     }
 
+    /**
+     * Возвращает шутку в прежнее состояние. Нужно отмене: она должна вернуть
+     * ровно то, что было, а не «примерно то же» — иначе это не отмена.
+     */
+    suspend fun restore(previous: Bit) {
+        bits.upsert(previous.copy(meta = sink.stamp().toDomain()).toEntity())
+    }
+
     /** Быстрый захват: одна строка текста превращается в зерно будущей шутки. */
     suspend fun capture(text: String, topicId: Id? = null): Id {
         val id = Id.generate(clock)
@@ -105,26 +113,38 @@ class BitRepository(
      * Правка шутки. Снимок предыдущей версии делается не чаще раза в
      * [SNAPSHOT_INTERVAL_MS]: иначе набор текста породит сотню записей в истории.
      */
-    suspend fun update(id: Id, note: String? = null, transform: (Bit) -> Bit) {
-        val current = bits.byId(id.value)?.toDomain() ?: return
+    /**
+     * Возвращает состояние ДО правки, либо null, если менять было нечего.
+     * Именно это значение отдаётся отмене, поэтому оно возвращается наружу,
+     * а не выбрасывается.
+     */
+    suspend fun update(id: Id, note: String? = null, transform: (Bit) -> Bit): Bit? {
+        val current = bits.byId(id.value)?.toDomain() ?: return null
         val updated = transform(current)
-        if (updated == current) return
+        if (updated == current) return null
 
         snapshotIfDue(current, note)
         bits.upsert(updated.copy(meta = sink.stamp().toDomain()).toEntity())
+        return current
     }
 
-    suspend fun setAttitude(id: Id, attitude: Attitude) =
+    suspend fun setAttitude(id: Id, attitude: Attitude): Bit? =
         update(id) { it.copy(attitude = attitude) }
 
-    suspend fun setPremise(id: Id, premise: String) =
+    suspend fun setPremise(id: Id, premise: String): Bit? =
         update(id) { it.copy(elements = it.elements.copy(premise = premise)) }
 
-    suspend fun setPunch(id: Id, punch: Punch) =
+    suspend fun setPunch(id: Id, punch: Punch): Bit? =
         update(id) { it.copy(elements = it.elements.copy(punch = punch)) }
 
-    suspend fun setActOut(id: Id, actOut: ActOut) =
+    suspend fun setActOut(id: Id, actOut: ActOut): Bit? =
         update(id) { it.copy(elements = it.elements.copy(actOut = actOut)) }
+
+    suspend fun setTitle(id: Id, title: String): Bit? =
+        update(id) { it.copy(title = title) }
+
+    suspend fun setTags(id: Id, tags: List<String>): Bit? =
+        update(id) { it.copy(elements = it.elements.copy(tags = tags)) }
 
     /**
      * Смена статуса вручную. Недопустимый переход не выполняется молча —
@@ -138,9 +158,10 @@ class BitRepository(
     }
 
     /** Мягкое удаление: запись остаётся надгробием, иначе воскреснет при слиянии. */
-    suspend fun delete(id: Id) {
-        val current = bits.byId(id.value) ?: return
+    suspend fun delete(id: Id): Bit? {
+        val current = bits.byId(id.value) ?: return null
         bits.upsert(current.copy(sync = sink.tombstone()))
+        return current.toDomain()
     }
 
     private suspend fun snapshotIfDue(bit: Bit, note: String?) {
