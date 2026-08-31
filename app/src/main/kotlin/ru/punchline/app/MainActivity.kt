@@ -18,8 +18,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
@@ -247,12 +249,8 @@ private fun PunchlineApp(container: AppContainer) {
 @Composable
 private fun UndoHost(container: AppContainer, snackbars: SnackbarHostState) {
     val scope = rememberCoroutineScope()
-    var pending by androidx.compose.runtime.remember {
-        androidx.compose.runtime.mutableStateOf<UndoLabel?>(null)
-    }
-    var undoBlock by androidx.compose.runtime.remember {
-        androidx.compose.runtime.mutableStateOf<(suspend () -> Unit)?>(null)
-    }
+    var pending by remember { mutableStateOf<UndoLabel?>(null) }
+    var undoBlock by remember { mutableStateOf<(suspend () -> Unit)?>(null) }
 
     LaunchedEffect(Unit) {
         container.undo.actions.collect { action ->

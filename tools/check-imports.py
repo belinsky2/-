@@ -50,6 +50,32 @@ for path in ROOT.rglob("*.kt"):
             if match and not line.startswith((" ", "\t")):
                 declared.setdefault(package, set()).add(match.group(1))
 
+# Отдельная проверка: делегат `by remember { mutableStateOf(...) }` работает
+# только при импорте операторов getValue/setValue. Без них компилятор ругается
+# на «no method setValue», и понять это по сообщению непросто. Ошибка сделана
+# в проекте дважды, поэтому проверяется механически.
+delegate_problems = []
+for path in ROOT.rglob("*.kt"):
+    if "/build/" in str(path):
+        continue
+    text = path.read_text(encoding="utf-8")
+    if not re.search(r"\bby\s+remember\b|\bby\s+rememberSaveable\b", text):
+        continue
+    if "mutableStateOf" not in text and "mutableIntStateOf" not in text:
+        continue
+    missing = [
+        name for name in ("getValue", "setValue")
+        if f"import androidx.compose.runtime.{name}" not in text
+    ]
+    if missing:
+        delegate_problems.append((path, missing))
+
+if delegate_problems:
+    print("Делегат `by remember { mutableStateOf }` без импорта операторов:\n")
+    for path, missing in delegate_problems:
+        print(f"  {path.relative_to(ROOT)}  — не хватает: {', '.join(missing)}")
+    print()
+
 broken = []
 for path, lineno, statement in imports:
     target = statement.removesuffix(".*")
@@ -68,7 +94,9 @@ for path, lineno, statement in imports:
         hint = f"есть в {', '.join(elsewhere)}" if elsewhere else "нигде не объявлено"
         broken.append((path, lineno, statement, hint))
 
-if broken:
+if broken or delegate_problems:
+    if not broken:
+        sys.exit(1)
     print("Импорты, которые никуда не ведут:\n")
     for path, lineno, statement, why in broken:
         print(f"  {path.relative_to(ROOT)}:{lineno}  {statement}  — {why}")
