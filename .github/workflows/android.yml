@@ -67,6 +67,26 @@ jobs:
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug
 
+      # Проверяем подпись прямо в сборке, а не полагаемся на то, что
+      # AGP «наверное подписал». Android отказывается ставить неподписанный
+      # APK сообщением «Приложение не установлено», и выяснять причину
+      # на телефоне вслепую — худший способ.
+      - name: Verify debug APK is installable
+        run: |
+          set -e
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "Размер: $(stat -c%s "$APK") байт"
+          "$TOOLS/apksigner" verify --print-certs --verbose "$APK"
+          "$TOOLS/aapt2" dump badging "$APK" | grep -E "^package|sdkVersion|application-label"
+          {
+            echo "### Проверка debug-APK"
+            echo '```'
+            "$TOOLS/aapt2" dump badging "$APK" | grep -E "^package|sdkVersion|application-label"
+            echo "размер: $(stat -c%s "$APK") байт"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/upload-artifact@v4
         with:
           name: punchline-debug-apk
@@ -91,8 +111,9 @@ jobs:
           fi
 
       - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.signed == 'true'
         with:
-          name: ${{ steps.name.outputs.artifact }}
+          name: punchline-release-apk
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
