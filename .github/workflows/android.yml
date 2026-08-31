@@ -11,6 +11,9 @@ concurrency:
   # прогон — единственный источник правды о том, собирается ли этап.
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -93,12 +96,32 @@ jobs:
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
+      # Артефакт прогона скачивается только ZIP-ом и только со страницы прогона.
+      # Релиз даёт прямую ссылку на .apk по постоянному адресу — её можно
+      # открыть с телефона и сразу поставить, без распаковки.
+      - name: Publish test build
+        if: github.ref_name == 'claude/comedy-joke-app-kdwyxa'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk punchline-test.apk
+          gh release delete test-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create test-latest punchline-test.apk \
+            --title "Тестовая сборка" \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --notes "Debug-сборка для проверки. Ставится без секретов подписи.
+          Отдельное приложение (суффикс .debug) — данные в релизную версию не перейдут.
+          Коммит: $GITHUB_SHA"
+
       - name: Summary
         run: |
           {
             echo "### Сборка «Панчлайн»"
             echo
-            echo "**punchline-debug-apk** — ставится сразу, без секретов. Для проверки."
+            echo "Скачать APK одним файлом: [Тестовая сборка](https://github.com/${{ github.repository }}/releases/tag/test-latest)"
+            echo
+            echo "**punchline-debug-apk** — тот же файл ZIP-ом, если релиз недоступен."
             echo
             if [ "${{ steps.signing.outputs.signed }}" = "true" ]; then
               echo "**punchline-release-apk** — подписан релизным ключом. Рабочая установка."
