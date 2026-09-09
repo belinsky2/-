@@ -66,13 +66,16 @@ jobs:
           path: web/shots/
 
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/claude/comedy-joke-app-kdwyxa'
+        if: github.ref == 'refs/heads/master'
         with:
           path: web/dist
 
   deploy:
     needs: check
-    if: github.ref == 'refs/heads/claude/comedy-joke-app-kdwyxa'
+    # Публикуем только с основной ветки: окружение github-pages по умолчанию
+    # других веток не пускает, и отказ приходит до запуска задания —
+    # без раннера, без шагов и без внятного сообщения.
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
