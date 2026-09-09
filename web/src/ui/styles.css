@@ -173,3 +173,10 @@ input[type=text]:focus, textarea:focus { outline: 2px solid var(--ink); outline-
 }
 
 .entry-text { white-space: pre-wrap; font-size: 15px; margin: 8px 0 0; color: var(--ink); }
+
+.rec-dot {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--danger);
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+@keyframes rec-pulse { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+audio { max-width: 100%; }

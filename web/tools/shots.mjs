@@ -22,7 +22,11 @@ function check(name, ok, detail = '') {
   else { console.log(`  ✗ ${name} ${detail}`); failures.push(name) }
 }
 
-const browser = await chromium.launch()
+const browser = await chromium.launch({
+  // Фальшивый микрофон: запись голоса — часть методики, и проверять её
+  // нужно так же, как всё остальное, а не «на живом устройстве потом».
+  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+})
 // Размер и плотность Galaxy S24 Ultra в CSS-пикселях.
 const ctx = await browser.newContext({
   viewport: { width: 412, height: 915 },
@@ -30,6 +34,7 @@ const ctx = await browser.newContext({
   locale: 'ru-RU',
   hasTouch: true,
   isMobile: true,
+  permissions: ['microphone'],
 })
 const page = await ctx.newPage()
 page.on('pageerror', (e) => { console.log(`  ✗ ошибка страницы: ${e.message}`); failures.push('pageerror') })
@@ -90,6 +95,15 @@ await page.click('[data-testid=punch-save]')
 await page.click('[data-testid=technique-LIST_OF_THREE]')
 await page.fill('[data-testid=actout-input]', 'Задираю голову и считаю этажи')
 await page.click('[data-testid=actout-save]')
+// --- голос ---
+await page.click('[data-testid=rec-start]')
+await page.waitForSelector('[data-testid=rec-stop]')
+await page.waitForTimeout(1200)
+await page.click('[data-testid=rec-stop]')
+await page.waitForSelector('[data-testid=clip]')
+check('запись голоса сохраняется и появляется в списке',
+  (await page.locator('[data-testid=clip]').count()) === 1)
+
 await page.click('[data-testid=duration-90]')
 await page.fill('[data-testid=tag-input]', 'быт')
 await page.click('[data-testid=tag-add]')
@@ -105,6 +119,8 @@ check('добивка пережила перезагрузку',
   (await page.inputValue('[data-testid=punch-input]')).includes('этаж'))
 check('act-out пережил перезагрузку',
   (await page.inputValue('[data-testid=actout-input]')).includes('этажи'))
+check('запись голоса пережила перезагрузку',
+  (await page.locator('[data-testid=clip]').count()) === 1)
 check('техника пережила перезагрузку',
   (await page.getAttribute('[data-testid=technique-LIST_OF_THREE]', 'class')).includes('on'))
 

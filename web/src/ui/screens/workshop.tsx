@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { Attitude, Bit, PunchTechnique } from '../../domain/domain'
 import { ATTITUDES, PUNCH_TECHNIQUES } from '../../domain/domain'
+import type { AudioClip } from '../../domain/domain'
+import type { Id } from '../../domain/identity'
 import { ATTITUDE_LABEL, ATTITUDE_PROMPT, STATUS_LABEL, T, TECHNIQUE_LABEL, UNDO_LABEL } from '../labels'
+import { VoiceBlock } from './voice'
 
 export const DURATION_CHOICES = [30, 45, 60, 90, 120, 180] as const
 
@@ -77,10 +80,13 @@ function SaveButton(
 interface Props {
   bit: Bit
   actions: WorkshopActions
+  clips: readonly AudioClip[]
+  onRecord: (blob: Blob, mimeType: string, durationSec: number) => void
+  onDeleteClip: (id: Id) => void
   onBack: () => void
 }
 
-export function WorkshopScreen({ bit, actions, onBack }: Props) {
+export function WorkshopScreen({ bit, actions, clips, onRecord, onDeleteClip, onBack }: Props) {
   const id = bit.id
   const [title, setTitleDraft, titleChanged] = useDraft(bit.title, id)
   const [premise, setPremiseDraft, premiseChanged] = useDraft(bit.elements.premise ?? '', id)
@@ -174,6 +180,10 @@ export function WorkshopScreen({ bit, actions, onBack }: Props) {
           />
           <span class="hint" style="margin:0">{T.actOutSpaceWork}</span>
         </label>
+      </Section>
+
+      <Section title={T.voiceTitle}>
+        <VoiceBlock clips={clips} onSave={onRecord} onDelete={onDeleteClip} hint={T.recHint} />
       </Section>
 
       <Section title={T.fieldDuration}>
