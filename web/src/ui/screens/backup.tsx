@@ -1,0 +1,62 @@
+import { useState } from 'preact/hooks'
+import { T } from '../labels'
+import { count } from '../plural'
+
+interface Props {
+  bitCount: number
+  topicCount: number
+  persistent: boolean
+  lastBackupAt: number | null
+  onExport: () => void
+  onImport: (file: File) => Promise<void>
+}
+
+/**
+ * Архив. Один файл, который открывается на телефоне без распаковки.
+ * Прошлая версия отдавала zip с тремя файлами внутри — так было честнее
+ * к формату, но человеку на телефоне непонятно, что с этим делать.
+ */
+export function BackupScreen({ bitCount, topicCount, persistent, lastBackupAt, onExport, onImport }: Props) {
+  const [chosen, setChosen] = useState<string | null>(null)
+
+  const when = lastBackupAt
+    ? new Date(lastBackupAt).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
+    : T.backupNever
+
+  return (
+    <div class="scroll" data-screen="backup">
+      <div class="card">
+        <h2>{T.backupTitle}</h2>
+        <p class="hint" style="margin-top:0">{T.backupExplain}</p>
+        <p class="hint">
+          {T.backupCounts} {count(bitCount, 'шутка', 'шутки', 'шуток')},{' '}
+          {count(topicCount, 'тема', 'темы', 'тем')}
+        </p>
+        <p class="hint">{T.backupLast} {when}</p>
+        <p class="hint">{persistent ? T.backupStorageOk : T.backupStorageWeak}</p>
+        <button class="btn" data-testid="backup-export" style="margin-top:10px" onClick={onExport}>
+          {T.backupNow}
+        </button>
+      </div>
+
+      <div class="card">
+        <h2>{T.backupRestore}</h2>
+        {/* Родная кнопка выбора файла подписана по-английски и не поддаётся
+            оформлению — прячем её и нажимаем через подпись. */}
+        <label class="btn" style="display:inline-block">
+          {T.backupChooseFile}
+          <input
+            type="file" accept="application/json,.json" data-testid="backup-import" hidden
+            onChange={(e) => {
+              const f = (e.target as HTMLInputElement).files?.[0]
+              if (!f) return
+              setChosen(f.name)
+              void onImport(f)
+            }}
+          />
+        </label>
+        <p class="hint">{chosen ?? T.backupNoFile}</p>
+      </div>
+    </div>
+  )
+}

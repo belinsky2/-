@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Панчлайн</string>
+
+    <!-- Нижняя навигация -->
+    <string name="tab_today">Сегодня</string>
+    <string name="tab_inbox">Входящие</string>
+    <string name="tab_topics">Темы</string>
+    <string name="tab_board">Материал</string>
+    <string name="tab_practice">Практика</string>
+    <string name="tab_morning">Дневник</string>
+    <string name="tab_setlists">Сеты</string>
+
+    <!-- Входящие -->
+    <string name="inbox_title">Входящие</string>
+    <string name="inbox_capture_hint">Что зацепило?</string>
+    <string name="inbox_capture_action">Записать</string>
+    <string name="inbox_empty">Пусто. Сюда падают идеи на ходу — потом разберём их на премису и панч.</string>
+    <string name="inbox_open_backup">Перенос данных</string>
+    <string name="inbox_open_backup_icon">⤓</string>
+
+    <!-- Темы -->
+    <string name="topics_add_hint">Тема — то, что бесит, пугает или не укладывается в голове</string>
+    <string name="topics_add_action">Добавить тему</string>
+    <string name="topics_passion">Сколько внутри злости: %1$d из 10</string>
+    <string name="topics_core">Главная</string>
+    <string name="topics_mind_map">Ассоциации</string>
+    <string name="topics_rant">Рант</string>
+    <string name="topics_over_limit">Главных тем больше %1$d. Картер советует сузиться до трёх — но это твой выбор, не запрет.</string>
+    <string name="topics_over_limit_ok">Понятно</string>
+
+    <!-- Дерево ассоциаций -->
+    <string name="mindmap_branch_root">Новая ветка от корня</string>
+    <string name="mindmap_branch_of">Ветка от: %1$s</string>
+    <string name="mindmap_add_hint">Что приходит в голову?</string>
+    <string name="mindmap_add_action">Добавить</string>
+    <string name="mindmap_to_root">К корню</string>
+    <string name="mindmap_branch">Ветвить</string>
+    <string name="mindmap_promote">В шутку</string>
+    <string name="mindmap_delete">Убрать</string>
+    <string name="mindmap_already_bit">Уже в работе</string>
+
+    <!-- Рант -->
+    <string name="rant_explainer">Говори про тему не останавливаясь: злись, ругайся, повторяйся. Текст потом, сейчас важно выговориться.</string>
+    <string name="rant_timer">%1$02d:%2$02d</string>
+    <string name="rant_start">Начать рант</string>
+    <string name="rant_stop">Стоп</string>
+    <string name="rant_saved">Записано, %1$d сек. Аудио сохранено.</string>
+    <string name="rant_nothing">Записать не вышло — проверь доступ к микрофону.</string>
+    <string name="rant_note_hint">Что зацепило в собственном ранте?</string>
+    <string name="rant_harvest">Это в материал</string>
+
+    <!-- Мастерская -->
+    <string name="workshop_step_attitude">Отношение</string>
+    <string name="workshop_step_premise">Премиса</string>
+    <string name="workshop_step_punch">Панч</string>
+    <string name="workshop_step_actout">Act-out</string>
+    <string name="workshop_step_tags">Добивки</string>
+    <string name="workshop_attitude_question">Что тут главное: сложно, странно, страшно или тупо?</string>
+    <string name="workshop_premise_template">Закончи мысль: самое %1$s в этом — то, что…</string>
+    <string name="workshop_premise_no_attitude">Сначала выбери отношение — премиса растёт из него.</string>
+    <string name="workshop_punch_question">Чем добиваешь? Смешение, поворот или список из трёх.</string>
+    <string name="workshop_actout_question">Кого играешь? Не описывай — покажи.</string>
+    <string name="workshop_space_work">Есть работа с пространством</string>
+    <string name="workshop_tags_question">Добивки — короткие фразы после панча</string>
+    <string name="workshop_tag_add">Добавить добивку</string>
+    <string name="workshop_save">Сохранить</string>
+    <string name="workshop_save_short">ОК</string>
+    <string name="workshop_saved">Сохранено</string>
+    <string name="workshop_title_hint">О чём шутка</string>
+    <string name="workshop_step_done">%1$s ✓</string>
+    <string name="workshop_tags_empty">Пока ни одной. Добивка — короткая фраза, которую бросаешь вслед панчу.</string>
+    <string name="workshop_tag_remove">%1$s ✕</string>
+
+    <!-- Отношения -->
+    <string name="attitude_hard">сложное</string>
+    <string name="attitude_weird">странное</string>
+    <string name="attitude_scary">страшное</string>
+    <string name="attitude_stupid">тупое</string>
+
+    <!-- Техники панча -->
+    <string name="punch_mix">Смешение</string>
+    <string name="punch_turn">Поворот</string>
+    <string name="punch_list_of_three">Список из трёх</string>
+    <string name="punch_self_mocking">Самоирония</string>
+    <string name="punch_other">Другое</string>
+
+    <!-- Состояния шутки -->
+    <string name="status_seed">Зерно</string>
+    <string name="status_premise">Есть премиса</string>
+    <string name="status_draft">Черновик</string>
+    <string name="status_tested">Обкатана</string>
+    <string name="status_polished">В акте</string>
+    <string name="status_parked">Отложена</string>
+    <string name="status_retired">Списана</string>
+
+    <!-- Доска материала -->
+    <string name="board_empty">Пока пусто. Запиши шутку выше, или поймай идею во входящих, или разбери тему на ассоциации.</string>
+    <string name="board_new_hint">Новая шутка — о чём она?</string>
+    <string name="board_new_action">Добавить шутку</string>
+    <string name="board_scheduled">· в сете</string>
+    <string name="board_promotion">Заслужила: %1$s</string>
+    <string name="hint_rewrite_or_park">Тишина %1$d раза подряд. Переписать премису или отношение?</string>
+    <string name="hint_missing_act_out">Нет act-out. Упражнение 12: сыграй, а не рассказывай.</string>
+    <string name="hint_stuck_in_draft">Черновик лежит без движения %1$d дней.</string>
+    <string name="hint_unused_polished">Не выносилась на сцену %1$d дней. Вернуть в сет?</string>
+
+    <!-- Сегодня -->
+    <string name="today_streak">🔥 %1$d дней подряд</string>
+    <string name="today_material">Готового материала: %1$d из %2$d мин</string>
+    <string name="today_gigs">Выступлений за 30 дней: %1$d</string>
+    <string name="today_inbox">Во входящих неразобранного: %1$d</string>
+    <string name="today_inbox_action">Разобрать</string>
+    <string name="today_bottleneck">Материал копится на этапе «%2$s»: %1$d шт. Здесь затык.</string>
+    <string name="today_attitudes">Отношения в материале</string>
+    <string name="today_act_out_ratio">С act-out: %1$d%%</string>
+    <string name="today_best">Что заходит лучше всего</string>
+    <string name="today_worst">Что тянет вниз</string>
+    <string name="today_backup">Перенос данных</string>
+
+    <!-- Практика: 48 упражнений -->
+    <string name="practice_progress">Пройдено упражнений: %1$d из %2$d</string>
+    <string name="practice_numbered">%1$d. %2$s</string>
+    <string name="practice_untitled">Упражнение %1$d</string>
+    <string name="practice_page">Книга, стр. %1$d</string>
+    <string name="practice_title_missing">Название этого упражнения восстановить не удалось. Впиши его из книги — обновление приложения не сотрёт.</string>
+    <string name="practice_title_hint">Название из книги</string>
+    <string name="practice_title_save">Сохранить название</string>
+    <string name="practice_answer_hint">Твой ответ</string>
+    <string name="practice_answer_save">Сохранить ответ</string>
+    <string name="part_intro">Введение</string>
+    <string name="part_one">Часть 1. Разминка</string>
+    <string name="part_two">Часть 2. Мастерская</string>
+    <string name="part_three">Часть 3. Сцена</string>
+    <string name="part_four">Часть 4. Ещё материал</string>
+
+    <!-- Утренние страницы -->
+    <string name="morning_streak">Цепочка: %1$d дней подряд</string>
+    <string name="morning_timer">%1$02d:%2$02d</string>
+    <string name="morning_hint">Пиши не останавливаясь. Плохо — тоже нормально.</string>
+    <string name="morning_save">Сохранить и закрыть день</string>
+    <string name="morning_harvest">Это в материал</string>
+
+    <!-- Сет-листы -->
+    <string name="setlist_new_title">Название сета</string>
+    <string name="setlist_new_minutes">Сколько минут</string>
+    <string name="setlist_create">Создать сет</string>
+    <string name="setlist_target">Цель: %1$d мин</string>
+    <string name="setlist_edit">Собрать</string>
+    <string name="setlist_stage">На сцену</string>
+    <string name="setlist_timing">%1$d из %2$d мин</string>
+    <string name="setlist_position">%1$d. %2$s</string>
+    <string name="setlist_up">Выше</string>
+    <string name="setlist_down">Ниже</string>
+    <string name="setlist_role">Роль</string>
+    <string name="setlist_remove">Убрать</string>
+    <string name="setlist_candidates">Что можно добавить</string>
+    <string name="setlist_no_candidates">Добавлять пока нечего. В сет попадают шутки от черновика и выше — то есть у которых есть отношение, премиса и панч. Доведи хотя бы одну в мастерской.</string>
+    <string name="role_opener">Открытие</string>
+    <string name="role_body">Тело</string>
+    <string name="role_closer">Закрытие</string>
+    <string name="role_callback">Каллбэк</string>
+    <string name="issue_callback_order">Каллбэк стоит раньше шутки, на которую ссылается — зал не поймёт отсылку.</string>
+    <string name="issue_same_topic">Две шутки подряд на одну тему. Разбавь.</string>
+    <string name="issue_weak_closer">Закрываешь не самым сильным. В сете есть шутка, которая заходит лучше.</string>
+    <string name="issue_over_time">Перебор примерно на %1$d мин.</string>
+    <string name="issue_under_time">Не хватает примерно %1$d мин.</string>
+
+    <!-- Режим сцены -->
+    <string name="stage_before">Перед выходом: экран не погаснет, тап — следующий номер.</string>
+    <string name="stage_venue">Где выступаешь</string>
+    <string name="stage_start_open_mic">Начать выступление</string>
+    <string name="stage_start_rehearsal">Это репетиция</string>
+    <string name="stage_cancel">Назад</string>
+    <string name="stage_timer">%1$02d:%2$02d из %3$d мин</string>
+    <string name="stage_position">%1$d из %2$d</string>
+    <string name="stage_back">Назад</string>
+    <string name="stage_finish">Закончил</string>
+
+    <!-- Разбор выступления -->
+    <string name="review_progress">Отмечено: %1$d из %2$d</string>
+    <string name="review_stats">Средняя реакция %1$s · смеха в минуту %2$s</string>
+    <string name="review_apply">Пересобрать акт по результатам</string>
+    <string name="review_done">Готово</string>
+    <string name="review_promotions">Движок изменил:</string>
+    <string name="review_promotion_line">%1$s → %2$s</string>
+    <string name="laugh_silence">Тишина</string>
+    <string name="laugh_chuckle">Хмык</string>
+    <string name="laugh_laugh">Смех</string>
+    <string name="laugh_big">Гогот</string>
+    <string name="laugh_applause">Аплодисменты</string>
+
+    <!-- Отмена действий -->
+    <string name="undo_action">Отменить</string>
+    <string name="undo_attitude">Отношение: %1$s</string>
+    <string name="undo_premise">Премиса изменена</string>
+    <string name="undo_punch">Панч: %1$s</string>
+    <string name="undo_act_out">Act-out изменён</string>
+    <string name="undo_tag_added">Добивка «%1$s» добавлена</string>
+    <string name="undo_tag_removed">Добивка «%1$s» убрана</string>
+    <string name="undo_title">Название: «%1$s»</string>
+    <string name="undo_bit_created">Шутка «%1$s» создана</string>
+    <string name="undo_bit_deleted">Шутка «%1$s» удалена</string>
+    <string name="undo_status">Статус: %1$s</string>
+    <string name="undo_topic_added">Тема «%1$s» добавлена</string>
+    <string name="undo_topic_deleted">Тема «%1$s» удалена</string>
+
+    <!-- Перенос данных -->
+    <string name="backup_title">Перенос данных</string>
+    <string name="backup_explainer">Весь материал — тексты, аудио, история выступлений — выгружается в один файл. Положи его туда, откуда сможешь достать: смена телефона или потеря устройства иначе означает потерю всего.</string>
+    <string name="backup_dont_open">Этот файл не нужно открывать и распаковывать — внутри служебные данные, читать их вручную незачем. Он нужен ровно для одного: вернуть всё обратно кнопкой «Восстановить из файла». Чтобы прочитать материал глазами, есть выгрузка в Markdown.</string>
+    <string name="backup_export">Выгрузить всё в файл</string>
+    <string name="backup_exported">Готово. Файл сохранён.</string>
+    <string name="backup_export_markdown">Выгрузить текст в Markdown</string>
+    <string name="backup_markdown_exported">Текст выгружен. Это не бэкап — обратно он не разворачивается.</string>
+    <string name="backup_untitled_topic">Без темы</string>
+    <string name="markdown_title">Панчлайн — выгрузка материала</string>
+    <string name="markdown_my_act">Мой акт</string>
+    <string name="markdown_in_progress">Шутки в работе</string>
+    <string name="markdown_archive">Архив</string>
+    <string name="markdown_premise">Премиса</string>
+    <string name="markdown_punch">Панч</string>
+    <string name="markdown_act_out">Act-out</string>
+    <string name="markdown_tags">Добивки</string>
+    <string name="backup_import">Восстановить из файла</string>
+    <string name="backup_preview">В архиве аудиозаписей: %1$d</string>
+    <string name="backup_import_warning">Восстановление заменит всё, что сейчас в приложении. После него приложение перезапустится.</string>
+    <string name="backup_import_confirm">Заменить данные</string>
+    <string name="backup_cancel">Отмена</string>
+    <string name="backup_imported">Данные восстановлены. Перезапусти приложение.</string>
+    <string name="backup_failed">Не получилось: %1$s</string>
+</resources>

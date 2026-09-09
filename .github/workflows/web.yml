@@ -1,0 +1,90 @@
+name: web
+
+on:
+  push:
+    branches: [ '**' ]
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Тесты домена и архива
+        run: npm test
+
+      - name: Типы и сборка
+        run: npm run build
+
+      # Прогон сценария живёт и локально, и здесь: локально он ловит правки
+      # сразу, здесь — гарантирует, что опубликовано только то, что прошло.
+      - name: Установить браузер
+        run: npx playwright install --with-deps chromium
+
+      - name: Прогон сценария
+        run: |
+          # Вывод сервера уводим в файл и гасим его через trap: при падении
+          # прогона bash -e обрывает скрипт, и без trap сервер остаётся жить,
+          # а шаг висит до таймаута вместо того, чтобы показать ошибку.
+          # --host 127.0.0.1 обязателен: по умолчанию vite слушает localhost,
+          # который на runner'е резолвится в IPv6, и стук в 127.0.0.1 уходит
+          # в пустоту при живом сервере.
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > preview.log 2>&1 &
+          server=$!
+          trap 'kill $server 2>/dev/null || true' EXIT
+          npx wait-on http://127.0.0.1:4173 -t 60000
+          node tools/shots.mjs
+
+      - name: Журнал сервера, если прогон упал
+        if: failure()
+        run: cat preview.log || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screens
+          path: web/shots/
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/master'
+        with:
+          path: web/dist
+
+  deploy:
+    needs: check
+    # Публикуем только с основной ветки: окружение github-pages по умолчанию
+    # других веток не пускает, и отказ приходит до запуска задания —
+    # без раннера, без шагов и без внятного сообщения.
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      # Pages включается один раз вручную: Settings → Pages → Source →
+      # GitHub Actions. Токен рабочего процесса создать сайт не может
+      # («Resource not accessible by integration»), сколько бы прав ему
+      # ни выдали в permissions.
+      - uses: actions/configure-pages@v5
+      - id: deploy
+        uses: actions/deploy-pages@v4
