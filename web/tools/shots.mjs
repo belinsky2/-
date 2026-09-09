@@ -55,6 +55,17 @@ check('полоса отмены появилась', await page.isVisible('[dat
 const undoText = await page.textContent('[data-testid=undobar]')
 check('отмена названа', undoText.includes('добавление шутки'), `текст: ${undoText}`)
 
+// Отмена создания обязана убрать запись. Раньше прогон отменял только
+// правку поля, и стёртое надгробие — запись возвращалась живой — прошло мимо.
+await page.click('[data-testid=undo]')
+await page.waitForSelector('[data-testid=inbox-empty]')
+check('отмена создания убирает шутку', (await page.locator('[data-testid=bit-item]').count()) === 0)
+await shot('inbox-after-undo-create')
+
+await page.fill('[data-testid=capture-input]', 'В лифте все смотрят вверх')
+await page.click('[data-testid=capture-add]')
+await page.waitForSelector('[data-testid=bit-item]')
+
 await page.click('[data-testid=bit-item]')
 await page.waitForSelector('[data-screen=workshop]')
 await shot('workshop-fresh')
@@ -120,6 +131,23 @@ await page.click('[data-testid=topic-add]')
 await page.waitForSelector('[data-testid=topic-item]')
 await shot('topics')
 check('тема добавляется', (await page.locator('[data-testid=topic-item]').count()) === 1)
+
+await page.click('[data-testid=undo]')
+await page.waitForFunction(() => document.querySelectorAll('[data-testid=topic-item]').length === 0)
+check('отмена создания убирает тему', (await page.locator('[data-testid=topic-item]').count()) === 0)
+
+// И она не должна воскреснуть после перезагрузки: надгробие обязано лечь в базу.
+await page.reload()
+await page.waitForSelector('[data-screen=inbox]')
+await page.click('[data-testid=tab-topics]')
+await page.waitForSelector('[data-screen=topics]')
+check('отменённая тема не воскресает после перезагрузки',
+  (await page.locator('[data-testid=topic-item]').count()) === 0)
+await shot('topics-after-undo')
+
+await page.fill('[data-testid=topic-input]', 'Городская жизнь')
+await page.click('[data-testid=topic-add]')
+await page.waitForSelector('[data-testid=topic-item]')
 
 await page.click('[data-testid=tab-backup]')
 await page.waitForSelector('[data-screen=backup]')

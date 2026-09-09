@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Attitude, Bit, PunchTechnique, Topic } from '../domain/domain'
-import { systemClock, type DeviceId } from '../domain/identity'
+import { systemClock, type DeviceId, type SyncMeta } from '../domain/identity'
 import { openDb, putAll, requestPersistence, type StoreName } from '../store/db'
 import { MutationSink } from '../store/sink'
 import { Repo } from '../store/repo'
@@ -74,7 +74,10 @@ export function App() {
 
   /** Любое изменение проходит здесь: перечитать список и подписать отмену. */
   const commit = useCallback(
-    async (label: string, run: () => Promise<{ store: StoreName; row: { id: string } } | null>) => {
+    async (
+      label: string,
+      run: () => Promise<{ store: StoreName; row: { id: string; meta: SyncMeta } } | null>,
+    ) => {
       if (!repo || !sink) return
       const prev = await run()
       await reload(repo, sink)

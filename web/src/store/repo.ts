@@ -1,4 +1,4 @@
-import type { Clock, Id } from '../domain/identity'
+import type { Clock, Id, SyncMeta } from '../domain/identity'
 import { generateId, isDeleted } from '../domain/identity'
 import type { Attitude, Bit, BitStatus, Punch, PunchTechnique, Topic } from '../domain/domain'
 import { EMPTY_ELEMENTS, assertPassionScore } from '../domain/domain'
@@ -142,11 +142,16 @@ export class Repo {
   }
 
   /**
-   * Возврат записи в точности к прежнему виду. Метаданные проставляются заново:
-   * отмена — это тоже изменение, и при слиянии она обязана победить то,
-   * что отменяет.
+   * Возврат записи к прежнему виду.
+   *
+   * Время, часы и устройство проставляются заново — отмена это тоже изменение,
+   * и при слиянии она обязана победить то, что отменяет. А вот признак
+   * удаления берётся из самой записи: отмена создания записывает надгробие,
+   * и если брать deletedAt из свежего штампа, где он всегда пуст, надгробие
+   * стирается и отменённая запись возвращается живой.
    */
-  async restore(store: StoreName, row: { id: Id }): Promise<void> {
-    await put(this.db, store, { ...row, meta: this.sink.stamp() })
+  async restore(store: StoreName, row: { id: Id; meta: SyncMeta }): Promise<void> {
+    const stamp = this.sink.stamp()
+    await put(this.db, store, { ...row, meta: { ...stamp, deletedAt: row.meta.deletedAt } })
   }
 }

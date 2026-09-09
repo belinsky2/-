@@ -60,6 +60,40 @@ describe('перенос материала между устройствами'
     expect(raw.filter((b) => isDeleted(b.meta))).toHaveLength(1)
   })
 
+  it('отмена создания убирает запись, а не воскрешает её', async () => {
+    const db = await freshDb(`undo-${Math.random()}`)
+    const sink = new MutationSink(clock, 'phone-a')
+    const repo = new Repo(db, sink, clock)
+
+    const topic = await repo.addTopic('Лишняя тема')
+    expect(await repo.topics()).toHaveLength(1)
+
+    // Отмена создания — это надгробие поверх свежесозданной записи.
+    await repo.restore('topics', { ...topic, meta: { ...topic.meta, deletedAt: topic.meta.updatedAt } })
+
+    expect(await repo.topics()).toHaveLength(0)
+    const raw = (await getAll<Topic>(db, 'topics'))[0]!
+    expect(isDeleted(raw.meta)).toBe(true)
+    // Часы всё равно двигаются вперёд: отмена обязана победить то, что отменяет.
+    expect(raw.meta.lamport).toBeGreaterThan(topic.meta.lamport)
+  })
+
+  it('отмена правки возвращает прежнее содержимое и не хоронит запись', async () => {
+    const db = await freshDb(`undo2-${Math.random()}`)
+    const sink = new MutationSink(clock, 'phone-a')
+    const repo = new Repo(db, sink, clock)
+
+    const b = await repo.addBit('Шутка')
+    const before = await repo.setPunch(b.id, 'первая добивка', 'TURN')
+    await repo.setPunch(b.id, 'вторая добивка', 'MIX')
+
+    await repo.restore('bits', before!)
+
+    const restored = (await repo.bits())[0]!
+    expect(restored.elements.punch).toBeNull()
+    expect(isDeleted(restored.meta)).toBe(false)
+  })
+
   it('логические часы нового устройства обгоняют привезённые', async () => {
     const db = await freshDb(`lam-${Math.random()}`)
     const sink = new MutationSink(clock, 'phone-b')
