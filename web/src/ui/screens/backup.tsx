@@ -9,6 +9,7 @@ interface Props {
   lastBackupAt: number | null
   onExport: () => void
   onImport: (file: File) => Promise<void>
+  onExportMarkdown: () => void
 }
 
 /**
@@ -16,7 +17,9 @@ interface Props {
  * Прошлая версия отдавала zip с тремя файлами внутри — так было честнее
  * к формату, но человеку на телефоне непонятно, что с этим делать.
  */
-export function BackupScreen({ bitCount, topicCount, persistent, lastBackupAt, onExport, onImport }: Props) {
+export function BackupScreen(
+  { bitCount, topicCount, persistent, lastBackupAt, onExport, onImport, onExportMarkdown }: Props,
+) {
   const [chosen, setChosen] = useState<string | null>(null)
 
   const when = lastBackupAt
@@ -56,6 +59,13 @@ export function BackupScreen({ bitCount, topicCount, persistent, lastBackupAt, o
           />
         </label>
         <p class="hint">{chosen ?? T.backupNoFile}</p>
+      </div>
+
+      <div class="card">
+        <h2>{T.exportTitle}</h2>
+        {/* Архив — для возврата в приложение, Markdown — чтобы читать глазами
+            и открыть где угодно через десять лет. Это разные задачи. */}
+        <button class="btn" data-testid="export-md" onClick={onExportMarkdown}>{T.exportDo}</button>
       </div>
     </div>
   )

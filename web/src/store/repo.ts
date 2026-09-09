@@ -4,6 +4,7 @@ import type { Attitude, Bit, BitStatus, Punch, PunchTechnique, Topic } from '../
 import { EMPTY_ELEMENTS, assertPassionScore } from '../domain/domain'
 import { deservedStatus } from '../domain/lifecycle'
 import type { MutationSink } from './sink'
+import type { BitPerformance } from '../domain/domain'
 import { get, getAll, put, type StoreName } from './db'
 
 /**
@@ -71,6 +72,12 @@ export class Repo {
     return bit
   }
 
+  /** Отметки зала по одной шутке. Нужны, чтобы правка не роняла её статус. */
+  private async performancesFor(bitId: Id): Promise<BitPerformance[]> {
+    const all = await getAll<BitPerformance>(this.db, 'performances')
+    return all.filter((p) => p.bitId === bitId && !isDeleted(p.meta))
+  }
+
   /**
    * Единственный путь изменения шутки. Статус пересчитывается здесь, а не в UI:
    * иначе «Мой акт» наполнялся бы по ощущениям, а не по содержимому.
@@ -79,16 +86,29 @@ export class Repo {
     const prev = await get<Bit>(this.db, 'bits', id)
     if (!prev) return null
     const changed = change(prev)
+    // История зала обязательно участвует в пересчёте. Без неё правка опечатки
+    // в обкатанной шутке роняла её обратно в черновик — и материал, уже
+    // проверенный на сцене, исчезал из кандидатов в сет.
     const withStatus: Bit = {
       ...changed,
-      // Статус считается от изменённой записи, а не от прежней: иначе ручное
-      // «отложить» тут же затиралось бы пересчётом. История зала подтянется
-      // отдельно — на этом экране её ещё нет.
-      status: deservedStatus(changed, []),
+      status: deservedStatus(changed, await this.performancesFor(id)),
       meta: this.sink.stamp(),
     }
     await put(this.db, 'bits', withStatus)
     return prev
+  }
+
+  /**
+   * Пересчёт статуса по свежей истории зала. Вызывается после отметки:
+   * связка «выступление → отметки → пересборка акта» — это и есть смысл
+   * всего приложения, и держаться она должна на данных, а не на ручном труде.
+   */
+  async refreshStatus(bitId: Id): Promise<void> {
+    const bit = await get<Bit>(this.db, 'bits', bitId)
+    if (!bit) return
+    const status = deservedStatus(bit, await this.performancesFor(bitId))
+    if (status === bit.status) return
+    await put(this.db, 'bits', { ...bit, status, meta: this.sink.stamp() })
   }
 
   setTitle(id: Id, title: string) { return this.update(id, (b) => ({ ...b, title: title.trim() })) }
@@ -128,6 +148,11 @@ export class Repo {
 
   setTags(id: Id, tags: readonly string[]) {
     return this.update(id, (b) => ({ ...b, elements: { ...b.elements, tags: [...tags] } }))
+  }
+
+  /** Хронометраж шутки. Без него сет-лист не считается, а значит и не нужен. */
+  setDuration(id: Id, durationSec: number | null) {
+    return this.update(id, (b) => ({ ...b, durationSec }))
   }
 
   setStatus(id: Id, status: BitStatus) {

@@ -3,6 +3,8 @@ import type { Attitude, Bit, PunchTechnique } from '../../domain/domain'
 import { ATTITUDES, PUNCH_TECHNIQUES } from '../../domain/domain'
 import { ATTITUDE_LABEL, ATTITUDE_PROMPT, STATUS_LABEL, T, TECHNIQUE_LABEL, UNDO_LABEL } from '../labels'
 
+export const DURATION_CHOICES = [30, 45, 60, 90, 120, 180] as const
+
 export interface WorkshopActions {
   setTitle: (v: string) => Promise<void>
   setAttitude: (a: Attitude | null) => Promise<void>
@@ -11,6 +13,7 @@ export interface WorkshopActions {
   setPunch: (v: string, tech: PunchTechnique) => Promise<void>
   setActOut: (v: string, space: boolean) => Promise<void>
   setTags: (tags: string[]) => Promise<void>
+  setDuration: (sec: number | null) => Promise<void>
 }
 
 /**
@@ -171,6 +174,24 @@ export function WorkshopScreen({ bit, actions, onBack }: Props) {
           />
           <span class="hint" style="margin:0">{T.actOutSpaceWork}</span>
         </label>
+      </Section>
+
+      <Section title={T.fieldDuration}>
+        {/* Фишками, а не полем: на телефоне вбивать секунды клавиатурой —
+            лишний шаг, а точность здесь всё равно приблизительная. */}
+        <div class="chips">
+          {DURATION_CHOICES.map((sec) => (
+            <button
+              key={sec}
+              class={`chip small${bit.durationSec === sec ? ' on' : ''}`}
+              data-testid={`duration-${sec}`}
+              onClick={() => void actions.setDuration(bit.durationSec === sec ? null : sec)}
+            >
+              {sec < 60 ? `${sec} с` : `${sec / 60} мин`}
+            </button>
+          ))}
+        </div>
+        <p class="hint">{T.fieldDurationHint}</p>
       </Section>
 
       <Section title={T.fieldTags}>
