@@ -1,0 +1,24 @@
+{
+  "name": "punchline-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "test": "vitest run",
+    "shots": "node tools/shots.mjs"
+  },
+  "dependencies": {
+    "preact": "^10.29.1"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.3",
+    "fake-indexeddb": "^6.2.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.14",
+    "vitest": "^3.2.4",
+    "wait-on": "^9.1.0"
+  }
+}

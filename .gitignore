@@ -12,3 +12,8 @@ keystore.properties
 .idea/
 *.iml
 .kotlin/
+
+# веб-приложение
+web/node_modules/
+web/dist/
+web/shots/
