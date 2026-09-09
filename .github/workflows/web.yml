@@ -39,19 +39,22 @@ jobs:
       # Прогон сценария живёт и локально, и здесь: локально он ловит правки
       # сразу, здесь — гарантирует, что опубликовано только то, что прошло.
       - name: Установить браузер
-        run: npx --yes playwright@1.56.1 install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Прогон сценария
         run: |
-          # Вывод сервера уводим в файл и гасим его явно: фоновый процесс
-          # с унаследованным stdout держит шаг живым после конца прогона.
+          # Вывод сервера уводим в файл и гасим его через trap: при падении
+          # прогона bash -e обрывает скрипт, и без trap сервер остаётся жить,
+          # а шаг висит до таймаута вместо того, чтобы показать ошибку.
           npx vite preview --port 4173 > preview.log 2>&1 &
-          echo $! > preview.pid
+          server=$!
+          trap 'kill $server 2>/dev/null || true' EXIT
           npx wait-on http://127.0.0.1:4173 -t 60000
           node tools/shots.mjs
-          status=$?
-          kill "$(cat preview.pid)" 2>/dev/null || true
-          exit $status
+
+      - name: Журнал сервера, если прогон упал
+        if: failure()
+        run: cat preview.log || true
 
       - uses: actions/upload-artifact@v4
         if: always()

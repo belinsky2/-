@@ -4,10 +4,9 @@
  * Смысл не в картинках, а в том, что до этого единственным способом узнать,
  * работает ли экран, было попросить человека поставить APK и потыкать.
  */
-import { createRequire } from 'node:module'
-
-// Playwright установлен глобально в этом окружении и остаётся CommonJS-модулем.
-const { chromium } = createRequire(import.meta.url)('/opt/node22/lib/node_modules/playwright')
+// Playwright — обычная зависимость проекта. Раньше он брался по абсолютному
+// пути глобальной установки: локально работало, на CI такого пути нет.
+import { chromium } from 'playwright'
 import { mkdirSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 

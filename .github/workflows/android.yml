@@ -1,8 +1,9 @@
 name: android
 
 on:
-  push:
-    branches: [ '**' ]
+  # Android-версия заморожена (docs/07-reshenie-o-platforme.md): собираем
+  # только по требованию, чтобы путь назад оставался рабочим, но не занимал
+  # очередь на каждый пуш.
   workflow_dispatch:
 
 concurrency:
