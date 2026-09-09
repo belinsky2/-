@@ -136,3 +136,54 @@ export function assertPassionScore(score: number): void {
     throw new RangeError(`passionScore вне 0..10: ${score}`)
   }
 }
+
+/** Запись утренних страниц. Свободное письмо, из которого потом растут зёрна. */
+export interface JournalEntry {
+  readonly id: Id
+  readonly dayMillis: number
+  readonly text: string
+  readonly durationSec: number
+  readonly meta: SyncMeta
+}
+
+/** Отметка о пройденном упражнении из тетради. */
+export interface ExerciseRecord {
+  readonly id: Id
+  readonly number: number
+  readonly done: boolean
+  readonly note: string
+  readonly meta: SyncMeta
+}
+
+/** Снимок шутки до изменения: проигравшая при слиянии версия не должна пропасть. */
+export interface BitVersion {
+  readonly id: Id
+  readonly bitId: Id
+  readonly title: string
+  readonly attitude: Attitude | null
+  readonly elements: BitElements
+  readonly status: BitStatus
+  readonly takenAt: number
+  readonly meta: SyncMeta
+}
+
+/** Аудиозапись: рант, act-out или целое выступление. */
+export interface AudioClip {
+  readonly id: Id
+  readonly bitId: Id | null
+  readonly gigId: Id | null
+  readonly mimeType: string
+  readonly durationSec: number
+  readonly bytes: Blob
+  readonly meta: SyncMeta
+}
+
+/** Настройки: цель по времени акта и комедийная цель из упражнения 2. */
+export interface Settings {
+  readonly id: 'settings'
+  readonly goalMinutes: number
+  readonly comedyVision: string
+  readonly meta: SyncMeta
+}
+
+export const GOAL_CHOICES = [5, 15, 30, 60] as const

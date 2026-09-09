@@ -124,3 +124,52 @@ input[type=text]:focus, textarea:focus { outline: 2px solid var(--ink); outline-
 
 /* След от сохранения: маленькая отметка вместо мёртвой кнопки. */
 .saved { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+/* Крупное число: главный экран должен читаться на ходу, не вчитываясь. */
+.big { font-size: 34px; font-weight: 700; margin: 0 0 8px; line-height: 1.1; }
+.big-unit { font-size: 15px; font-weight: 500; color: var(--muted); }
+
+.bar { height: 8px; border-radius: 999px; background: #ece5dc; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--ink); border-radius: 999px; }
+
+.spread-row { display: grid; grid-template-columns: 84px 1fr 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
+.spread-name { font-size: 14px; color: var(--muted); }
+.spread-num { font-size: 13px; color: var(--muted); text-align: right; }
+
+.section {
+  margin: 18px 16px 6px; font-size: 13px; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--muted); font-weight: 700;
+}
+.item.column { flex-direction: column; align-items: flex-start; }
+
+.card.warn { border-left: 3px solid #c08a2e; }
+.plain { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink); }
+.plain li { margin-bottom: 4px; }
+.chip.danger-chip { color: var(--danger); border-color: #e6cfc9; }
+
+/* Сцена: тёмный экран, крупные буквы, ничего лишнего. */
+.stage {
+  position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column;
+  background: #0b0b0b; color: #f4efe8;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.stage-top { display: flex; align-items: center; gap: 12px; font-size: 20px; font-variant-numeric: tabular-nums; }
+.stage-top .over { color: #ff7a6b; }
+.stage-top span:nth-child(2) { font-size: 14px; color: #8d857c; margin-left: auto; }
+.stage-exit { background: none; border: 0; color: #8d857c; font: inherit; font-size: 14px; cursor: pointer; }
+.stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; cursor: pointer; }
+.stage-role { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #8d857c; }
+.stage-title { font-size: 34px; font-weight: 700; line-height: 1.15; }
+.stage-punch { font-size: 22px; line-height: 1.3; color: #d8cfc3; }
+.stage-actout { font-size: 17px; color: #a99f93; }
+.stage-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+.stage-controls button {
+  flex: 1; padding: 16px 8px; border: 1px solid #2e2b28; border-radius: 12px;
+  background: #171614; color: #f4efe8; font: 600 16px/1 inherit; cursor: pointer;
+}
+.stage-finish {
+  width: 100%; padding: 14px; border: 0; border-radius: 12px;
+  background: #f4efe8; color: #0b0b0b; font: 600 16px/1 inherit; cursor: pointer;
+}
+
+.entry-text { white-space: pre-wrap; font-size: 15px; margin: 8px 0 0; color: var(--ink); }

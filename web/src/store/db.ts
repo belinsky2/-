@@ -7,9 +7,12 @@
  */
 
 export const DB_NAME = 'punchline'
-export const DB_VERSION = 1
+export const DB_VERSION = 2
 
-export const STORES = ['topics', 'bits', 'setLists', 'gigs', 'performances', 'meta'] as const
+export const STORES = [
+  'topics', 'bits', 'setLists', 'gigs', 'performances',
+  'journal', 'exercises', 'audio', 'versions', 'settings', 'meta',
+] as const
 export type StoreName = (typeof STORES)[number]
 
 export function openDb(name = DB_NAME): Promise<IDBDatabase> {
@@ -17,6 +20,8 @@ export function openDb(name = DB_NAME): Promise<IDBDatabase> {
     const req = indexedDB.open(name, DB_VERSION)
     req.onupgradeneeded = () => {
       const db = req.result
+      // Хранилища добавляются, но никогда не удаляются: старая версия базы
+      // на другом устройстве может содержать записи, которых здесь ещё нет.
       for (const s of STORES) {
         if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' })
       }
