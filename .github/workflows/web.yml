@@ -43,9 +43,15 @@ jobs:
 
       - name: Прогон сценария
         run: |
-          npx vite preview --port 4173 &
+          # Вывод сервера уводим в файл и гасим его явно: фоновый процесс
+          # с унаследованным stdout держит шаг живым после конца прогона.
+          npx vite preview --port 4173 > preview.log 2>&1 &
+          echo $! > preview.pid
           npx wait-on http://127.0.0.1:4173 -t 60000
           node tools/shots.mjs
+          status=$?
+          kill "$(cat preview.pid)" 2>/dev/null || true
+          exit $status
 
       - uses: actions/upload-artifact@v4
         if: always()
