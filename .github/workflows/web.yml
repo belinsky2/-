@@ -78,10 +78,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      # enablement включает Pages в настройках репозитория само,
-      # чтобы публикация не требовала ручного шага.
+      # Pages включается один раз вручную: Settings → Pages → Source →
+      # GitHub Actions. Токен рабочего процесса создать сайт не может
+      # («Resource not accessible by integration»), сколько бы прав ему
+      # ни выдали в permissions.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - id: deploy
         uses: actions/deploy-pages@v4
