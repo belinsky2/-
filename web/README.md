@@ -19,8 +19,8 @@
     npm run build   # типы + сборка
     npm run dev     # разработка
 
-    npx vite preview --port 4173 &
-    npm run shots   # прогон сценария, картинки в web/shots/
+    npm run preview &   # слушает именно 127.0.0.1, а не localhost
+    npm run shots       # прогон сценария, картинки в web/shots/
 
 ## Устройство
 

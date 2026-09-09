@@ -46,7 +46,10 @@ jobs:
           # Вывод сервера уводим в файл и гасим его через trap: при падении
           # прогона bash -e обрывает скрипт, и без trap сервер остаётся жить,
           # а шаг висит до таймаута вместо того, чтобы показать ошибку.
-          npx vite preview --port 4173 > preview.log 2>&1 &
+          # --host 127.0.0.1 обязателен: по умолчанию vite слушает localhost,
+          # который на runner'е резолвится в IPv6, и стук в 127.0.0.1 уходит
+          # в пустоту при живом сервере.
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > preview.log 2>&1 &
           server=$!
           trap 'kill $server 2>/dev/null || true' EXIT
           npx wait-on http://127.0.0.1:4173 -t 60000
