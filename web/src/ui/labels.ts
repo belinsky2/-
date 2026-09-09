@@ -213,6 +213,7 @@ export const T = {
   journalMinutes: 'мин письма',
 
   // --- голос ---
+  voiceTitle: 'Голос',
   recStart: 'Записать голосом',
   recStop: 'Остановить',
   recDenied: 'Микрофон не разрешён.',
@@ -243,6 +244,8 @@ export const UNDO_LABEL = {
   punchSet: 'добивка',
   actOutSet: 'act-out',
   durationOfBit: 'хронометраж шутки',
+  audioAdded: 'запись голоса',
+  audioDeleted: 'удаление записи голоса',
   tagAdded: (tag: string) => `тег «${tag}»`,
   tagRemoved: (tag: string) => `удаление тега «${tag}»`,
   statusSet: (s: BitStatus) => `статус «${STATUS_LABEL[s]}»`,

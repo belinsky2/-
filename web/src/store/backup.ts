@@ -23,6 +23,60 @@ export interface Vault {
   readonly data: Readonly<Record<string, readonly unknown[]>>
 }
 
+/**
+ * Двоичные поля в JSON.
+ *
+ * Аудиозапись — это Blob, а JSON.stringify превращает его в пустой объект.
+ * Без явного кодирования архив молча терял бы записи голоса, продолжая
+ * выглядеть целым, — самый опасный вид потери.
+ */
+const BLOB_TAG = '__blob__'
+
+interface EncodedBlob {
+  readonly [BLOB_TAG]: string
+  readonly type: string
+}
+
+function isEncodedBlob(v: unknown): v is EncodedBlob {
+  return typeof v === 'object' && v !== null && BLOB_TAG in v
+}
+
+async function blobToBase64(b: Blob): Promise<string> {
+  const buf = new Uint8Array(await b.arrayBuffer())
+  let bin = ''
+  // Кусками: apply на массиве в мегабайты падает на переполнении стека.
+  const CHUNK = 0x8000
+  for (let i = 0; i < buf.length; i += CHUNK) {
+    bin += String.fromCharCode(...buf.subarray(i, i + CHUNK))
+  }
+  return btoa(bin)
+}
+
+function base64ToBlob(b64: string, type: string): Blob {
+  const bin = atob(b64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return new Blob([out], { type })
+}
+
+async function encodeRow(row: unknown): Promise<unknown> {
+  if (typeof row !== 'object' || row === null) return row
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(row as Record<string, unknown>)) {
+    out[k] = v instanceof Blob ? { [BLOB_TAG]: await blobToBase64(v), type: v.type } : v
+  }
+  return out
+}
+
+export function decodeRow(row: unknown): unknown {
+  if (typeof row !== 'object' || row === null) return row
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(row as Record<string, unknown>)) {
+    out[k] = isEncodedBlob(v) ? base64ToBlob(v[BLOB_TAG], v.type) : v
+  }
+  return out
+}
+
 export async function buildVault(
   db: IDBDatabase,
   deviceId: string,
@@ -32,7 +86,8 @@ export async function buildVault(
   const data: Record<string, readonly unknown[]> = {}
   for (const s of STORES) {
     // Надгробия тоже уезжают в архив: без них удаление не переживёт слияние.
-    data[s] = await getAll<unknown>(db, s as StoreName)
+    const rows = await getAll<unknown>(db, s as StoreName)
+    data[s] = await Promise.all(rows.map(encodeRow))
   }
   return { format: VAULT_FORMAT, app: 'punchline', exportedAt: now, deviceId, lamport, data }
 }

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import 'fake-indexeddb/auto'
-import { buildVault, inspectVault } from './backup'
+import { buildVault, decodeRow, inspectVault } from './backup'
 import { getAll, openDb, putAll, type StoreName } from './db'
 import { MutationSink } from './sink'
 import { Repo } from './repo'
+import { Repo2 } from './repo2'
 import type { Bit, Topic } from '../domain/domain'
 import { isDeleted } from '../domain/identity'
 
@@ -41,7 +42,7 @@ describe('перенос материала между устройствами'
     const repoB = new Repo(newPhone, sinkB, clock)
 
     for (const [store, rows] of Object.entries(vault.data)) {
-      await putAll(newPhone, store as StoreName, rows)
+      await putAll(newPhone, store as StoreName, rows.map(decodeRow))
       for (const r of rows) sinkB.observe((r as Bit).meta.lamport)
     }
 
@@ -92,6 +93,36 @@ describe('перенос материала между устройствами'
     const restored = (await repo.bits())[0]!
     expect(restored.elements.punch).toBeNull()
     expect(isDeleted(restored.meta)).toBe(false)
+  })
+
+  it('запись голоса переживает архив, а не превращается в пустоту', async () => {
+    const db = await freshDb(`audio-${Math.random()}`)
+    const sink = new MutationSink(clock, 'phone-a')
+    const repo2 = new Repo2(db, sink, clock)
+
+    const original = new Blob([new Uint8Array([1, 2, 3, 250, 251, 252])], { type: 'audio/webm' })
+    const bitId = 'bit-1'
+    await repo2.addAudio(original, 'audio/webm', 12, bitId, null)
+
+    // Через JSON, как это и происходит при настоящем экспорте и импорте.
+    const vault = await buildVault(db, 'phone-a', sink.current(), clock())
+    const round = JSON.parse(JSON.stringify(vault)) as typeof vault
+
+    const target = await freshDb(`audio2-${Math.random()}`)
+    const sink2 = new MutationSink(clock, 'phone-b')
+    const repo2b = new Repo2(target, sink2, clock)
+    for (const [store, rows] of Object.entries(round.data)) {
+      await putAll(target, store as StoreName, (rows as unknown[]).map(decodeRow))
+    }
+
+    const clips = await repo2b.audioFor(bitId, null)
+    expect(clips).toHaveLength(1)
+    expect(clips[0]!.durationSec).toBe(12)
+    expect(clips[0]!.bytes).toBeInstanceOf(Blob)
+    expect(clips[0]!.bytes.size).toBe(original.size)
+    expect(new Uint8Array(await clips[0]!.bytes.arrayBuffer())).toEqual(
+      new Uint8Array(await original.arrayBuffer()),
+    )
   })
 
   it('логические часы нового устройства обгоняют привезённые', async () => {

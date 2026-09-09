@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type {
-  Attitude, Bit, BitPerformance, ExerciseRecord, Gig, GigType, JournalEntry,
+  Attitude, AudioClip, Bit, BitPerformance, ExerciseRecord, Gig, GigType, JournalEntry,
   LaughResult, PunchTechnique, SetList, SetListRole, Settings, Topic,
 } from '../domain/domain'
 import { systemClock, type DeviceId, type Id, type SyncMeta } from '../domain/identity'
@@ -10,7 +10,7 @@ import { openDb, putAll, requestPersistence, type StoreName } from '../store/db'
 import { MutationSink } from '../store/sink'
 import { Repo } from '../store/repo'
 import { Repo2 } from '../store/repo2'
-import { backupDue, buildVault, downloadVault, inspectVault } from '../store/backup'
+import { backupDue, buildVault, decodeRow, downloadVault, inspectVault } from '../store/backup'
 import { loadExercises, type Exercise } from '../store/exercises'
 import { ATTITUDE_LABEL, ROLE_LABEL, STATUS_LABEL, T, TECHNIQUE_LABEL, UNDO_LABEL } from './labels'
 import { useUndo } from './undo'
@@ -71,6 +71,7 @@ export function App() {
   const [repo2, setRepo2] = useState<Repo2 | null>(null)
   const [data, setData] = useState<Snapshot>(EMPTY)
   const [exercises, setExercises] = useState<Exercise[]>([])
+  const [clips, setClips] = useState<AudioClip[]>([])
   const [tab, setTab] = useState<Tab>('today')
   const [overlay, setOverlay] = useState<Overlay>({ kind: 'none' })
   const [query, setQuery] = useState('')
@@ -174,6 +175,13 @@ export function App() {
     }
   }, [data, repo2])
 
+  useEffect(() => {
+    // Записи тяжёлые, поэтому подтягиваются только для открытой шутки,
+    // а не вместе со всем материалом.
+    if (!repo2 || overlay.kind !== 'bit') { setClips([]); return }
+    void repo2.audioFor(overlay.id, null).then(setClips)
+  }, [repo2, overlay, data.bits])
+
   const openBit = useMemo(
     () => (overlay.kind === 'bit' ? data.bits.find((b) => b.id === overlay.id) ?? null : null),
     [overlay, data.bits],
@@ -233,7 +241,7 @@ export function App() {
     }
     const rows = (parsed as { data: Record<string, unknown[]> }).data
     for (const [store, list] of Object.entries(rows)) {
-      await putAll(db, store as StoreName, list)
+      await putAll(db, store as StoreName, list.map(decodeRow))
       for (const r of list) {
         const m = (r as { meta?: { lamport?: number } }).meta
         if (m?.lamport !== undefined) sink.observe(m.lamport)
@@ -299,7 +307,20 @@ export function App() {
       )}
 
       {overlay.kind === 'bit' && openBit ? (
-        <WorkshopScreen bit={openBit} actions={bitActions} onBack={() => setOverlay({ kind: 'none' })} />
+        <WorkshopScreen
+          bit={openBit}
+          actions={bitActions}
+          clips={clips}
+          onRecord={(blob, mime, sec) =>
+            void commitCreate(UNDO_LABEL.audioAdded, 'audio', () =>
+              repo2.addAudio(blob, mime, sec, openBit.id, null))}
+          onDeleteClip={(id) =>
+            void commit(UNDO_LABEL.audioDeleted, async () => {
+              const prev = await repo2.deleteAudio(id)
+              return prev ? { store: 'audio', row: prev } : null
+            })}
+          onBack={() => setOverlay({ kind: 'none' })}
+        />
       ) : overlay.kind === 'set' && openSet ? (
         <SetListEditor
           setList={openSet}
