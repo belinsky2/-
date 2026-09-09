@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import type { Topic } from '../../domain/domain'
 import { T } from '../labels'
+import { count } from '../plural'
 
 interface Props {
   topics: readonly Topic[]
@@ -47,7 +48,7 @@ export function TopicsScreen({ topics, bitCount, onAdd, onDelete }: Props) {
             <li key={t.id} class="item" data-testid="topic-item">
               <div class="grow">
                 <div class="title">{t.title}</div>
-                <div class="sub">{bitCount(t.id)}</div>
+                <div class="sub">{count(bitCount(t.id), 'шутка', 'шутки', 'шуток')}</div>
               </div>
               <button class="btn danger" onClick={() => void onDelete(t.id)}>{T.topicDelete}</button>
             </li>
