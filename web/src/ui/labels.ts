@@ -229,6 +229,8 @@ export const T = {
   versionsEmpty: 'История пуста.',
   versionRestore: 'Вернуть эту версию',
 
+  helpOpen: 'Как работает этот экран',
+  helpClose: 'Понятно',
   exportTitle: 'Экспорт в Markdown',
   exportDo: 'Выгрузить текстом',
 } as const

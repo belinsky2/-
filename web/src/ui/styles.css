@@ -180,3 +180,17 @@ input[type=text]:focus, textarea:focus { outline: 2px solid var(--ink); outline-
 }
 @keyframes rec-pulse { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
 audio { max-width: 100%; }
+
+/* Справка по текущему экрану. Раскрывается сверху, а не отдельной страницей:
+   читать её нужно, глядя на сам экран, а не вместо него. */
+.help-btn {
+  width: 30px; height: 30px; flex: none; border-radius: 50%;
+  border: 1px solid #4a453f; background: none; color: #fff;
+  font: 600 16px/1 inherit; cursor: pointer;
+}
+.help {
+  background: #f2ece2; border-bottom: 1px solid var(--line);
+  padding: 14px 16px 8px;
+}
+.help p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: #453f39; }
+.help .btn.ghost { padding: 6px 0; color: var(--ink); font-weight: 600; }

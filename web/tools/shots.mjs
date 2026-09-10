@@ -55,6 +55,15 @@ await page.waitForFunction(() =>
   document.querySelector('[data-testid=ready-minutes]')?.textContent?.includes('30'))
 check('цель по времени сохраняется', true)
 
+// --- справка ---
+await page.click('[data-testid=help-toggle]')
+await page.waitForSelector('[data-testid=help]')
+const helpToday = await page.textContent('[data-testid=help]')
+check('справка «Сегодня» содержательна', helpToday.includes('цепочка'), `текст: ${helpToday.slice(0, 60)}`)
+await shot('help')
+await page.click('[data-testid=help-close]')
+check('справка закрывается', (await page.locator('[data-testid=help]').count()) === 0)
+
 // ================= Материал: захват =================
 await page.click('[data-testid=tab-material]')
 await page.waitForSelector('[data-screen=material]')
@@ -123,6 +132,14 @@ check('запись голоса пережила перезагрузку',
   (await page.locator('[data-testid=clip]').count()) === 1)
 check('техника пережила перезагрузку',
   (await page.getAttribute('[data-testid=technique-LIST_OF_THREE]', 'class')).includes('on'))
+
+// Справка на каждом экране своя, а не одна на всё приложение.
+await page.click('[data-testid=help-toggle]')
+await page.waitForSelector('[data-testid=help]')
+const helpWorkshop = await page.textContent('[data-testid=help]')
+check('справка мастерской объясняет act-out', helpWorkshop.includes('act-out'))
+check('справка меняется вместе с экраном', helpWorkshop !== helpToday)
+await page.click('[data-testid=help-close]')
 
 // ================= Поиск =================
 await page.click('[data-testid=back]')
@@ -233,6 +250,11 @@ await shot('today')
 // ================= Архив и экспорт =================
 await page.click('[data-testid=open-settings]')
 await page.waitForSelector('[data-screen=backup]')
+check('в настройках есть общая карта приложения', await page.isVisible('[data-testid=guide]'))
+const guide = await page.textContent('[data-testid=guide]')
+for (const tabName of ['Сегодня', 'Практика', 'Материал', 'Сеты', 'Дневник']) {
+  check(`карта упоминает раздел «${tabName}»`, guide.includes(tabName))
+}
 await shot('backup')
 const vault = await Promise.all([
   page.waitForEvent('download'),

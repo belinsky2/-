@@ -13,6 +13,7 @@ import { Repo2 } from '../store/repo2'
 import { backupDue, buildVault, decodeRow, downloadVault, inspectVault } from '../store/backup'
 import { loadExercises, type Exercise } from '../store/exercises'
 import { ATTITUDE_LABEL, ROLE_LABEL, STATUS_LABEL, T, TECHNIQUE_LABEL, UNDO_LABEL } from './labels'
+import { HELP } from './help'
 import { useUndo } from './undo'
 import { InboxScreen } from './screens/inbox'
 import { TopicsScreen } from './screens/topics'
@@ -75,6 +76,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>('today')
   const [overlay, setOverlay] = useState<Overlay>({ kind: 'none' })
   const [query, setQuery] = useState('')
+  const [helpOpen, setHelpOpen] = useState(false)
   const [persistent, setPersistent] = useState(false)
   const [lastBackupAt, setLastBackupAt] = useState<number | null>(
     Number(localStorage.getItem(BACKUP_KEY)) || null,
@@ -288,16 +290,40 @@ export function App() {
     )
   }
 
+  const helpKey =
+    overlay.kind === 'bit' ? 'workshop'
+    : overlay.kind === 'set' ? 'sets'
+    : overlay.kind === 'review' ? 'review'
+    : overlay.kind === 'settings' ? 'backup'
+    : tab
+  const help = HELP[helpKey]
+
   const found = query.trim() ? searchBits(data.bits, query) : null
 
   return (
     <div class="app">
       <div class="topbar">
         {overlay.kind !== 'none' && (
-          <button data-testid="back" onClick={() => setOverlay({ kind: 'none' })}>←</button>
+          <button data-testid="back" onClick={() => { setOverlay({ kind: 'none' }); setHelpOpen(false) }}>←</button>
         )}
-        <span class="grow">{T.appName}</span>
+        <span class="grow">{help?.title ?? T.appName}</span>
+        <button
+          class="help-btn" data-testid="help-toggle"
+          aria-label={T.helpOpen} aria-expanded={helpOpen}
+          onClick={() => setHelpOpen((v) => !v)}
+        >
+          {helpOpen ? '×' : '?'}
+        </button>
       </div>
+
+      {helpOpen && help && (
+        <div class="help" data-testid="help">
+          {help.lines.map((line, i) => <p key={i}>{line}</p>)}
+          <button class="btn ghost" data-testid="help-close" onClick={() => setHelpOpen(false)}>
+            {T.helpClose}
+          </button>
+        </div>
+      )}
 
       {undo.pending && (
         <div class="undobar" data-testid="undobar">
@@ -516,7 +542,7 @@ export function App() {
           ] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id} class={tab === id ? 'on' : ''} data-testid={`tab-${id}`}
-              onClick={() => { setTab(id); setQuery('') }}
+              onClick={() => { setTab(id); setQuery(''); setHelpOpen(false) }}
             >
               {label}
             </button>
