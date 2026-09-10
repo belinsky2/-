@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import { HELP } from '../help'
 import { T } from '../labels'
 import { count } from '../plural'
 
@@ -28,6 +29,15 @@ export function BackupScreen(
 
   return (
     <div class="scroll" data-screen="backup">
+      {/* Общая карта приложения. В настройках, потому что сюда заходят,
+          когда что-то ищут, а не когда работают над шуткой. */}
+      <div class="card" data-testid="guide">
+        <h2>{HELP.backup!.title}</h2>
+        {HELP.backup!.lines.map((line, i) => (
+          <p key={i} class="hint" style={i === 0 ? 'margin-top:0' : ''}>{line}</p>
+        ))}
+      </div>
+
       <div class="card">
         <h2>{T.backupTitle}</h2>
         <p class="hint" style="margin-top:0">{T.backupExplain}</p>
