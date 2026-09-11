@@ -128,6 +128,10 @@ check('добивка пережила перезагрузку',
   (await page.inputValue('[data-testid=punch-input]')).includes('этаж'))
 check('act-out пережил перезагрузку',
   (await page.inputValue('[data-testid=actout-input]')).includes('этажи'))
+// Записи подтягиваются отдельным запросом после открытия шутки, поэтому
+// именно ждём появления, а не считаем сразу: без ожидания проверка проходила
+// локально и падала на более медленном runner'е.
+await page.waitForSelector('[data-testid=clip]')
 check('запись голоса пережила перезагрузку',
   (await page.locator('[data-testid=clip]').count()) === 1)
 check('техника пережила перезагрузку',

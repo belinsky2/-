@@ -181,7 +181,11 @@ export function App() {
     // Записи тяжёлые, поэтому подтягиваются только для открытой шутки,
     // а не вместе со всем материалом.
     if (!repo2 || overlay.kind !== 'bit') { setClips([]); return }
-    void repo2.audioFor(overlay.id, null).then(setClips)
+    // Не обнуляем список перед запросом: иначе при каждой правке шутки
+    // записи на мгновение пропадают с экрана и появляются обратно.
+    let cancelled = false
+    void repo2.audioFor(overlay.id, null).then((list) => { if (!cancelled) setClips(list) })
+    return () => { cancelled = true }
   }, [repo2, overlay, data.bits])
 
   const openBit = useMemo(
