@@ -71,6 +71,18 @@ export function BackupScreen(
         <p class="hint">{chosen ?? T.backupNoFile}</p>
       </div>
 
+      {/* Версия сборки. Нужна ровно для одного: чтобы проверить, дошла ли до
+          устройства та версия, о которой шла речь, — не полагаясь на слова. */}
+      <div class="card" data-testid="version">
+        <h2>{T.versionTitle}</h2>
+        <p class="hint" style="margin-top:0">
+          {new Date(__BUILD__.at).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })}
+          {' · '}
+          <code>{__BUILD__.sha}</code>
+        </p>
+        <p class="hint">{T.versionHint}</p>
+      </div>
+
       <div class="card">
         <h2>{T.exportTitle}</h2>
         {/* Архив — для возврата в приложение, Markdown — чтобы читать глазами

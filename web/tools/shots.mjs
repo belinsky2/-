@@ -254,6 +254,14 @@ await shot('today')
 // ================= Архив и экспорт =================
 await page.click('[data-testid=open-settings]')
 await page.waitForSelector('[data-screen=backup]')
+check('в настройках видна версия сборки', await page.isVisible('[data-testid=version]'))
+const version = (await page.textContent('[data-testid=version]')).replace(/\s+/g, ' ')
+// Версия — единственный способ владельцу проверить, доехала ли публикация,
+// не полагаясь на чужие слова. Она обязана быть настоящей, а не заглушкой.
+check('версия содержит дату и коммит',
+  /\d{2}\.\d{2}\.\d{4}/.test(version) && /[0-9a-f]{7}|локальная/.test(version),
+  `текст: ${version.slice(0, 80)}`)
+
 check('в настройках есть общая карта приложения', await page.isVisible('[data-testid=guide]'))
 const guide = await page.textContent('[data-testid=guide]')
 for (const tabName of ['Сегодня', 'Практика', 'Материал', 'Сеты', 'Дневник']) {
