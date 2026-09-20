@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
-import type { Attitude, Bit, PunchTechnique } from '../../domain/domain'
+import type { Attitude, Bit, PunchTechnique, Topic } from '../../domain/domain'
 import { ATTITUDES, PUNCH_TECHNIQUES } from '../../domain/domain'
 import type { AudioClip } from '../../domain/domain'
 import type { Id } from '../../domain/identity'
@@ -17,6 +17,7 @@ export interface WorkshopActions {
   setActOut: (v: string, space: boolean) => Promise<void>
   setTags: (tags: string[]) => Promise<void>
   setDuration: (sec: number | null) => Promise<void>
+  setTopic: (topicId: Id | null) => Promise<void>
 }
 
 /**
@@ -79,6 +80,7 @@ function SaveButton(
 
 interface Props {
   bit: Bit
+  topics: readonly Topic[]
   actions: WorkshopActions
   clips: readonly AudioClip[]
   onRecord: (blob: Blob, mimeType: string, durationSec: number) => void
@@ -86,7 +88,9 @@ interface Props {
   onBack: () => void
 }
 
-export function WorkshopScreen({ bit, actions, clips, onRecord, onDeleteClip, onBack }: Props) {
+export function WorkshopScreen(
+  { bit, topics, actions, clips, onRecord, onDeleteClip, onBack }: Props,
+) {
   const id = bit.id
   const [title, setTitleDraft, titleChanged] = useDraft(bit.title, id)
   const [premise, setPremiseDraft, premiseChanged] = useDraft(bit.elements.premise ?? '', id)
@@ -107,6 +111,25 @@ export function WorkshopScreen({ bit, actions, clips, onRecord, onDeleteClip, on
           onInput={(e) => setTitleDraft((e.target as HTMLInputElement).value)}
         />
         <SaveButton changed={titleChanged} filled={title.trim() !== ''} testid="title-save" onSave={() => void actions.setTitle(title)} />
+      </Section>
+
+      <Section title={T.fieldTopic}>
+        {topics.length === 0 ? (
+          <p class="hint" style="margin-top:0">{T.fieldTopicEmpty}</p>
+        ) : (
+          <div class="chips">
+            {topics.map((t) => (
+              <button
+                key={t.id}
+                class={`chip small${bit.topicId === t.id ? ' on' : ''}`}
+                data-testid={`topic-${t.id}`}
+                onClick={() => void actions.setTopic(bit.topicId === t.id ? null : t.id)}
+              >
+                {t.title}
+              </button>
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section title={T.fieldAttitude}>
@@ -197,7 +220,8 @@ export function WorkshopScreen({ bit, actions, clips, onRecord, onDeleteClip, on
               data-testid={`duration-${sec}`}
               onClick={() => void actions.setDuration(bit.durationSec === sec ? null : sec)}
             >
-              {sec < 60 ? `${sec} с` : `${sec / 60} мин`}
+              {/* Запятая, а не точка: «1.5 мин» — не по-русски. */}
+              {sec < 60 ? `${sec} с` : `${String(sec / 60).replace('.', ',')} мин`}
             </button>
           ))}
         </div>

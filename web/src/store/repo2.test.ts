@@ -78,6 +78,38 @@ describe('сет-листы', () => {
   })
 })
 
+describe('тема шутки', () => {
+  beforeEach(() => { n = 0 })
+
+  it('шутку можно привязать к теме и отвязать обратно', async () => {
+    const { repo } = await fresh()
+    const topic = await repo.addTopic('Лифты')
+    const b = await repo.addBit('В лифте молчат')
+    expect((await repo.bit(b.id))!.topicId).toBeNull()
+
+    await repo.setTopic(b.id, topic.id)
+    expect((await repo.bit(b.id))!.topicId).toBe(topic.id)
+
+    await repo.setTopic(b.id, null)
+    expect((await repo.bit(b.id))!.topicId).toBeNull()
+  })
+
+  it('привязка к теме не сбивает статус шутки', async () => {
+    const { repo, repo2 } = await fresh()
+    const topic = await repo.addTopic('Лифты')
+    const b = await repo.addBit('шутка')
+    await repo.setAttitude(b.id, 'HARD')
+    await repo.setPremise(b.id, 'премиса')
+    await repo.setPunch(b.id, 'добивка', 'TURN')
+    const gig = await repo2.addGig(null, 'OPEN_MIC', 'Подвал')
+    await repo2.mark(gig.id, b.id, 'LAUGH')
+    await repo.refreshStatus(b.id)
+
+    await repo.setTopic(b.id, topic.id)
+    expect((await repo.bit(b.id))!.status).toBe('TESTED')
+  })
+})
+
 describe('отметки зала', () => {
   beforeEach(() => { n = 0 })
 
