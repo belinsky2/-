@@ -145,7 +145,7 @@ await page.waitForSelector('[data-screen=today]')
 await page.click('[data-testid=tab-material]')
 await page.click('[data-testid=bit-item]')
 await page.waitForSelector('[data-screen=workshop]')
-check('добивка пережила перезагрузку',
+check('панчлайн пережил перезагрузку',
   (await page.inputValue('[data-testid=punch-input]')).includes('этаж'))
 check('act-out пережил перезагрузку',
   (await page.inputValue('[data-testid=actout-input]')).includes('этажи'))
@@ -174,7 +174,7 @@ check('назначенная тема видна в списке материа
   (await page.textContent('[data-testid=bit-item]')).includes('Городская жизнь'))
 await page.fill('[data-testid=search]', 'этаж')
 await page.waitForSelector('[data-testid=search-results]')
-check('поиск находит по добивке, а не только по названию',
+check('поиск находит по панчлайну, а не только по названию',
   (await page.locator('[data-testid=search-results] .item').count()) === 1)
 await shot('search')
 await page.fill('[data-testid=search]', '')
@@ -203,10 +203,10 @@ check('сет создаётся', (await page.locator('[data-testid=set-item]')
 await page.click('[data-testid=set-item]')
 await page.waitForSelector('[data-screen=set-editor]')
 await page.click('[data-testid=set-add-bit]')
-// Первый сет собирают до первого выступления, поэтому черновик с добивкой
+// Первый сет собирают до первого выступления, поэтому черновик с панчлайном
 // обязан быть доступен. Прежняя проверка закрепляла замкнутый круг.
 await page.waitForSelector('[data-testid=candidate]')
-check('черновик с добивкой можно поставить в первый сет',
+check('черновик с панчлайном можно поставить в первый сет',
   (await page.locator('[data-testid=candidate]').count()) === 1)
 await shot('set-editor-empty')
 
@@ -237,9 +237,9 @@ check('обкатанная шутка попадает в кандидаты', 
 await page.click('[data-testid=candidate]')
 await page.waitForSelector('[data-testid=set-row]')
 check('шутка встаёт в сет', (await page.locator('[data-testid=set-row]').count()) === 1)
-check('недобор по времени виден', await page.isVisible('[data-testid=set-issues]'))
+check('недобор по таймингу виден', await page.isVisible('[data-testid=set-issues]'))
 const planned = (await page.textContent('[data-testid=set-planned]')).trim()
-check('хронометраж шутки попадает в сумму сета', planned.startsWith('1:30'), `сумма: ${planned}`)
+check('тайминг шутки попадает в сумму сета', planned.startsWith('1:30'), `сумма: ${planned}`)
 await shot('set-editor')
 check('нет горизонтальной прокрутки в сете', (await noOverflow()) <= 0)
 

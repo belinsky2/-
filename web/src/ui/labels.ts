@@ -22,8 +22,8 @@ export const ATTITUDE_PROMPT: Record<Attitude, string> = {
 }
 
 export const TECHNIQUE_LABEL: Record<PunchTechnique, string> = {
-  MIX: 'смешение',
-  TURN: 'поворот',
+  MIX: 'микс',
+  TURN: 'твист',
   LIST_OF_THREE: 'список из трёх',
   SELF_MOCKING: 'самоирония',
   OTHER: 'другое',
@@ -40,15 +40,15 @@ export const STATUS_LABEL: Record<BitStatus, string> = {
 }
 
 export const ROLE_LABEL: Record<SetListRole, string> = {
-  OPENER: 'открывашка',
-  BODY: 'тело',
-  CLOSER: 'закрывашка',
+  OPENER: 'опенер',
+  BODY: 'боди',
+  CLOSER: 'клоузер',
   CALLBACK: 'каллбэк',
 }
 
 export const GIG_LABEL: Record<GigType, string> = {
   REHEARSAL: 'прогон',
-  OPEN_MIC: 'открытый микрофон',
+  OPEN_MIC: 'опен-майк',
   SHOWCASE: 'шоукейс',
   PAID: 'платный',
 }
@@ -96,13 +96,13 @@ export const T = {
   fieldTopicEmpty: 'Тем пока нет. Добавь тему во «Входящих» — шутки растут из них.',
   fieldAttitude: 'Отношение',
   fieldPremise: 'Премиса',
-  fieldSetup: 'Подводка',
-  fieldPunch: 'Добивка',
+  fieldSetup: 'Сетап',
+  fieldPunch: 'Панчлайн',
   fieldTechnique: 'Техника',
   fieldActOut: 'Act-out',
   actOutSpaceWork: 'есть работа с пространством',
-  fieldDuration: 'Хронометраж',
-  fieldDurationHint: 'Сколько это занимает на сцене. Нужно, чтобы сет считался по времени.',
+  fieldDuration: 'Тайминг',
+  fieldDurationHint: 'Сколько это занимает на сцене. Без тайминга сет не посчитать.',
   fieldTags: 'Теги',
   tagPlaceholder: 'новый тег',
   tagAdd: 'плюс',
@@ -142,7 +142,7 @@ export const T = {
   todayGigs: 'Выступлений за 30 дней',
   todayBottleneck: 'Где затык',
   todayBottleneckHint: 'Больше всего материала застряло здесь.',
-  todayGoal: 'Цель по времени акта',
+  todayGoal: 'Цель по таймингу акта',
   todayVision: 'Комедийная цель',
   todayVisionPlaceholder: 'Через год я…',
   todayActOut: 'Шуток с act-out',
@@ -163,13 +163,13 @@ export const T = {
   setPlaceholder: 'Название сета',
   setAdd: 'Собрать сет',
   setsEmpty: 'Сетов нет. Сет — это порядок, в котором ты выйдешь.',
-  setTarget: 'Хронометраж',
+  setTarget: 'Тайминг',
   setPlanned: 'Набрано',
   setAddBit: 'Добавить шутку',
   setCandidates: 'Кандидаты',
-  setCandidatesHint: 'Всё, у чего есть добивка. Проверенное залом — сверху.',
+  setCandidatesHint: 'Всё, у чего есть панчлайн. Проверенное залом — сверху.',
   setNoCandidates:
-    'Кандидатов нет. В сет попадает шутка, у которой есть добивка, — допиши её в мастерской.',
+    'Кандидатов нет. В сет попадает шутка, у которой есть панчлайн, — допиши его в мастерской.',
   setAverage: 'средний',
   setNoHistory: 'ещё не звучала',
   setStage: 'Режим сцены',
@@ -179,9 +179,9 @@ export const T = {
 
   issueCallback: 'Каллбэк стоит раньше шутки, на которую ссылается.',
   issueSameTopic: 'Две подряд на одну тему — разбавь.',
-  issueWeakCloser: 'Закрывающая слабее, чем есть в сете.',
-  issueOverTime: 'Перебор по времени',
-  issueUnderTime: 'Недобор по времени',
+  issueWeakCloser: 'Клоузер слабее, чем есть в сете.',
+  issueOverTime: 'Перебор по таймингу',
+  issueUnderTime: 'Недобор по таймингу',
 
   // --- сцена ---
   stageStart: 'Начать',
@@ -250,10 +250,10 @@ export const UNDO_LABEL = {
   attitudeSet: (a: Attitude) => `отношение «${ATTITUDE_LABEL[a]}»`,
   attitudeCleared: 'снятие отношения',
   premiseSet: 'премиса',
-  setupSet: 'подводка',
-  punchSet: 'добивка',
+  setupSet: 'сетап',
+  punchSet: 'панчлайн',
   actOutSet: 'act-out',
-  durationOfBit: 'хронометраж шутки',
+  durationOfBit: 'тайминг шутки',
   topicSet: 'тема шутки',
   audioAdded: 'запись голоса',
   audioDeleted: 'удаление записи голоса',
@@ -267,7 +267,7 @@ export const UNDO_LABEL = {
   setDeleted: 'удаление сета',
   roleSet: (r: SetListRole) => `роль «${ROLE_LABEL[r]}»`,
   orderChanged: 'перестановка в сете',
-  targetSet: 'хронометраж сета',
+  targetSet: 'тайминг сета',
   gigCreated: 'запись выступления',
   marked: (r: LaughResult) => `отметка «${LAUGH_LABEL[r]}»`,
   durationSet: 'длительность выступления',
