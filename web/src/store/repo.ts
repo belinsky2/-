@@ -150,6 +150,11 @@ export class Repo {
     return this.update(id, (b) => ({ ...b, elements: { ...b.elements, tags: [...tags] } }))
   }
 
+  /** Привязка шутки к теме. Тема без шуток бесполезна, шутка без темы теряется. */
+  setTopic(id: Id, topicId: Id | null) {
+    return this.update(id, (b) => ({ ...b, topicId }))
+  }
+
   /** Хронометраж шутки. Без него сет-лист не считается, а значит и не нужен. */
   setDuration(id: Id, durationSec: number | null) {
     return this.update(id, (b) => ({ ...b, durationSec }))

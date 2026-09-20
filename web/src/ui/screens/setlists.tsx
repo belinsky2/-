@@ -3,7 +3,7 @@ import type { Bit, SetList, SetListRole } from '../../domain/domain'
 import { SETLIST_ROLES } from '../../domain/domain'
 import type { Id } from '../../domain/identity'
 import { plannedDuration, validateSetList, type SetListIssue } from '../../domain/setlist'
-import { ROLE_LABEL, T } from '../labels'
+import { ROLE_LABEL, STATUS_LABEL, T } from '../labels'
 import { count } from '../plural'
 
 const TARGETS = [300, 420, 600, 900, 1800, 3600]
@@ -103,11 +103,20 @@ export function SetListEditor(
   const planned = plannedDuration(ordered, byId)
   const issues = validateSetList(setList, byId, scores)
 
-  // Кандидаты — то, что уже проверено залом. Сырое в сет не ставят.
+  // Кандидат — шутка, у которой есть добивка: её уже можно рассказать.
+  //
+  // Раньше сюда пускало только обкатанное, то есть отмеченное после
+  // выступления. Но выступление собирают по сету — получался замкнутый круг,
+  // в котором первый сет собрать нельзя. Зерно и премиса по-прежнему не
+  // проходят: рассказывать там пока нечего.
   const used = new Set(ordered.map((i) => i.bitId))
+  const RANK: Record<string, number> = { POLISHED: 3, TESTED: 2, DRAFT: 1 }
   const candidates = bits
-    .filter((b) => !used.has(b.id) && (b.status === 'TESTED' || b.status === 'POLISHED'))
-    .sort((a, b) => (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0))
+    .filter((b) => !used.has(b.id) && RANK[b.status] !== undefined)
+    .sort((a, b) =>
+      // Проверенное залом сверху, внутри — по среднему результату.
+      (RANK[b.status]! - RANK[a.status]!) || ((scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0)),
+    )
 
   return (
     <div class="scroll" data-screen="set-editor">
@@ -200,9 +209,12 @@ export function SetListEditor(
                   <div class="grow">
                     <div class="title">{b.title}</div>
                     <div class="sub">
-                      {scores.has(b.id) ? `средний ${scores.get(b.id)!.toFixed(1)}` : 'без истории'}
+                      {scores.has(b.id)
+                        ? `${T.setAverage} ${scores.get(b.id)!.toFixed(1)}`
+                        : T.setNoHistory}
                     </div>
                   </div>
+                  <span class="badge">{STATUS_LABEL[b.status]}</span>
                 </li>
               ))}
             </ul>

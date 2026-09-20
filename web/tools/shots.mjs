@@ -88,6 +88,8 @@ await page.click('[data-testid=topic-add]')
 await page.waitForSelector('[data-testid=topic-item]')
 await shot('material')
 check('тема добавляется', (await page.locator('[data-testid=topic-item]').count()) === 1)
+check('пока тема не назначена, шутка числится без темы',
+  (await page.textContent('[data-testid=bit-item]')).includes('без темы'))
 
 // ================= Мастерская =================
 await page.click('[data-testid=bit-item]')
@@ -113,11 +115,30 @@ await page.waitForSelector('[data-testid=clip]')
 check('запись голоса сохраняется и появляется в списке',
   (await page.locator('[data-testid=clip]').count()) === 1)
 
+// --- тема ---
+// Темы создаются во «Входящих», а привязываются здесь. Без этого шага все
+// шутки навсегда оставались «без темы».
+const topicChip = page.locator('[data-testid^=topic-]').first()
+const topicId = await topicChip.getAttribute('data-testid')
+await topicChip.click()
+// Запись проходит через базу и перечитывание списка, поэтому ждём отметку,
+// а не читаем класс сразу.
+await page.waitForSelector(`[data-testid="${topicId}"].on`)
+check('тема назначается шутке', true)
+
 await page.click('[data-testid=duration-90]')
 await page.fill('[data-testid=tag-input]', 'быт')
 await page.click('[data-testid=tag-add]')
 await page.waitForSelector('[data-testid=tag-chip]')
+// Верх мастерской: тема и отношение. Нижнюю часть видно на следующем кадре.
+await page.locator('[data-screen=workshop]').evaluate((el) => { el.scrollTop = 0 })
+await shot('workshop-top')
+await page.locator('[data-screen=workshop]').evaluate((el) => { el.scrollTop = el.scrollHeight })
 await shot('workshop')
+
+const durations = await page.locator('[data-testid^=duration-]').allTextContents()
+check('дробные минуты пишутся через запятую',
+  durations.every((d) => !d.includes('.')), `подписи: ${durations.join(' / ')}`)
 
 await page.reload()
 await page.waitForSelector('[data-screen=today]')
@@ -136,6 +157,8 @@ check('запись голоса пережила перезагрузку',
   (await page.locator('[data-testid=clip]').count()) === 1)
 check('техника пережила перезагрузку',
   (await page.getAttribute('[data-testid=technique-LIST_OF_THREE]', 'class')).includes('on'))
+await page.waitForSelector('[data-testid^=topic-].on')
+check('тема пережила перезагрузку', true)
 
 // Справка на каждом экране своя, а не одна на всё приложение.
 await page.click('[data-testid=help-toggle]')
@@ -147,6 +170,8 @@ await page.click('[data-testid=help-close]')
 
 // ================= Поиск =================
 await page.click('[data-testid=back]')
+check('назначенная тема видна в списке материала',
+  (await page.textContent('[data-testid=bit-item]')).includes('Городская жизнь'))
 await page.fill('[data-testid=search]', 'этаж')
 await page.waitForSelector('[data-testid=search-results]')
 check('поиск находит по добивке, а не только по названию',
@@ -178,9 +203,11 @@ check('сет создаётся', (await page.locator('[data-testid=set-item]')
 await page.click('[data-testid=set-item]')
 await page.waitForSelector('[data-screen=set-editor]')
 await page.click('[data-testid=set-add-bit]')
-// Шутка ещё не была на сцене — в кандидаты не попадает.
-check('сырое в сет не предлагается',
-  (await page.locator('[data-testid=candidate]').count()) === 0)
+// Первый сет собирают до первого выступления, поэтому черновик с добивкой
+// обязан быть доступен. Прежняя проверка закрепляла замкнутый круг.
+await page.waitForSelector('[data-testid=candidate]')
+check('черновик с добивкой можно поставить в первый сет',
+  (await page.locator('[data-testid=candidate]').count()) === 1)
 await shot('set-editor-empty')
 
 // ================= Выступление и разбор =================

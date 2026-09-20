@@ -225,6 +225,8 @@ export function App() {
         edit(UNDO_LABEL.actOutSet, (id) => repo.setActOut(id, v, space))(),
       setDuration: (sec: number | null) =>
         edit(UNDO_LABEL.durationOfBit, (id) => repo.setDuration(id, sec))(),
+      setTopic: (topicId: Id | null) =>
+        edit(UNDO_LABEL.topicSet, (id) => repo.setTopic(id, topicId))(),
       setTags: (tags: string[]) => {
         const before = openBit?.elements.tags ?? []
         const added = tags.find((x) => !before.includes(x))
@@ -339,6 +341,7 @@ export function App() {
       {overlay.kind === 'bit' && openBit ? (
         <WorkshopScreen
           bit={openBit}
+          topics={data.topics}
           actions={bitActions}
           clips={clips}
           onRecord={(blob, mime, sec) =>
