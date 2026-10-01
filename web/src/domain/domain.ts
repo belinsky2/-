@@ -130,7 +130,7 @@ export interface BitPerformance {
   readonly meta: SyncMeta
 }
 
-/** Проверка, которую в Kotlin делал init-блок Topic. */
+/** Оценка страсти к теме — целое от 0 до 10. */
 export function assertPassionScore(score: number): void {
   if (!Number.isInteger(score) || score < 0 || score > 10) {
     throw new RangeError(`passionScore вне 0..10: ${score}`)
