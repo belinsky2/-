@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks'
 import type { Bit } from '../../domain/domain'
-import { STATUS_LABEL, T, UNDO_LABEL } from '../labels'
+import { STATUS_LABEL, T } from '../labels'
 
 interface Props {
   bits: readonly Bit[]
@@ -63,4 +63,3 @@ export function InboxScreen({ bits, topicTitle, onAdd, onOpen }: Props) {
   )
 }
 
-export const inboxUndoLabels = UNDO_LABEL

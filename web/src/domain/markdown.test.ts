@@ -56,6 +56,13 @@ describe('экспорт', () => {
     expect(md).toContain('быт')
   })
 
+  it('темы вложены в материал, а не стоят рядом с разделами', () => {
+    const material = md.slice(md.indexOf('## Материал'), md.indexOf('## Мой акт'))
+    expect(material).toContain('### Лифты')
+    expect(material).toContain('#### Лифт')
+    expect(material).not.toMatch(/^## Лифты$/m)
+  })
+
   it('не выносит удалённое', () => {
     const dead = { ...polished, meta: { ...polished.meta, deletedAt: 1 } }
     expect(exportMarkdown(L, [topic], [draft, dead], [], [])).not.toContain('Готовая')
@@ -64,7 +71,7 @@ describe('экспорт', () => {
   it('шутка без темы попадает в свою группу, а не теряется', () => {
     const orphan = { ...bit(t.clock, { id: 'b3', topicId: null }), title: 'Сирота' }
     const out = exportMarkdown(L, [topic], [orphan], [], [])
-    expect(out).toContain('## без темы')
+    expect(out).toContain('### без темы')
     expect(out).toContain('Сирота')
   })
 })

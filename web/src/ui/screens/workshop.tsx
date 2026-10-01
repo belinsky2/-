@@ -3,7 +3,7 @@ import type { Attitude, Bit, PunchTechnique, Topic } from '../../domain/domain'
 import { ATTITUDES, PUNCH_TECHNIQUES } from '../../domain/domain'
 import type { AudioClip } from '../../domain/domain'
 import type { Id } from '../../domain/identity'
-import { ATTITUDE_LABEL, ATTITUDE_PROMPT, STATUS_LABEL, T, TECHNIQUE_LABEL, UNDO_LABEL } from '../labels'
+import { ATTITUDE_LABEL, ATTITUDE_PROMPT, STATUS_LABEL, T, TECHNIQUE_LABEL } from '../labels'
 import { VoiceBlock } from './voice'
 
 export const DURATION_CHOICES = [30, 45, 60, 90, 120, 180] as const
@@ -99,7 +99,11 @@ export function WorkshopScreen(
   const [actOut, setActOutDraft, actOutChanged] = useDraft(bit.elements.actOut?.text ?? '', id)
   const [tag, setTag] = useState('')
 
-  const technique: PunchTechnique = bit.elements.punch?.technique ?? 'OTHER'
+  // Техника выбирается и до того, как написан панчлайн. Без панчлайна её
+  // некуда сохранить, поэтому она держится в черновике и уходит в базу вместе
+  // с ним. Прежде выбор молча терялся: пустой панчлайн записывался как null.
+  const [technique, setTechnique, techniqueChanged] =
+    useDraft<PunchTechnique>(bit.elements.punch?.technique ?? 'OTHER', id)
   const spaceWork = bit.elements.actOut?.hasSpaceWork ?? false
   const tags = bit.elements.tags
 
@@ -170,7 +174,8 @@ export function WorkshopScreen(
           onInput={(e) => setPunchDraft((e.target as HTMLTextAreaElement).value)}
         />
         <SaveButton
-          changed={punchChanged} filled={punch.trim() !== ''} testid="punch-save"
+          changed={punchChanged || (techniqueChanged && punch.trim() !== '')}
+          filled={punch.trim() !== ''} testid="punch-save"
           onSave={() => void actions.setPunch(punch, technique)}
         />
         <div class="chips" style="margin-top:12px">
@@ -179,7 +184,13 @@ export function WorkshopScreen(
               key={t}
               class={`chip small${technique === t ? ' on' : ''}`}
               data-testid={`technique-${t}`}
-              onClick={() => void actions.setPunch(punch || bit.elements.punch?.text || '', t)}
+              onClick={() => {
+                setTechnique(t)
+                // Сохранённый панчлайн с новой техникой записываем сразу; если
+                // панчлайна ещё нет или он не сохранён — техника ждёт его.
+                const saved = bit.elements.punch?.text
+                if (saved && !punchChanged) void actions.setPunch(saved, t)
+              }}
             >
               {TECHNIQUE_LABEL[t]}
             </button>
@@ -265,4 +276,3 @@ export function WorkshopScreen(
   )
 }
 
-export const workshopUndoLabels = UNDO_LABEL

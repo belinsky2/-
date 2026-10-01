@@ -1,9 +1,8 @@
 /**
  * Тонкая обёртка над IndexedDB.
  *
- * Хранилища повторяют таблицы Room один в один, включая поля синхронизации:
- * формат данных — это контракт с будущим Mac-приложением и с архивом-бэкапом,
- * и расходиться ему с Kotlin-версией нельзя.
+ * У каждой записи есть поля синхронизации: формат данных — это контракт
+ * с архивом-бэкапом и с будущей синхронизацией между устройствами.
  */
 
 export const DB_NAME = 'punchline'
@@ -72,4 +71,22 @@ export async function requestPersistence(): Promise<boolean> {
   if (!navigator.storage?.persist) return false
   if (await navigator.storage.persisted()) return true
   return navigator.storage.persist()
+}
+
+/**
+ * Наибольшие логические часы среди всех записей.
+ *
+ * Счётчик хранился только в localStorage. Если браузер почистит его, но
+ * оставит базу, новые правки начинали отсчёт с нуля и проигрывали своим же
+ * старым записям при первом слиянии. При запуске счётчик подтягивается к базе.
+ */
+export async function maxLamport(db: IDBDatabase): Promise<number> {
+  let max = 0
+  for (const s of STORES) {
+    for (const row of await getAll<{ meta?: { lamport?: number } }>(db, s)) {
+      const l = row.meta?.lamport
+      if (typeof l === 'number' && l > max) max = l
+    }
+  }
+  return max
 }
