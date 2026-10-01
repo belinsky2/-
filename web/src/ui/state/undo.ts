@@ -19,6 +19,8 @@ export interface UndoState {
   readonly pending: UndoableAction | null
   readonly toast: string | null
   push: (label: string, undo: () => Promise<void>) => void
+  /** Действие без отмены: полоса не должна продолжать предлагать прошлое. */
+  clear: () => void
   run: () => Promise<void>
   clearToast: () => void
 }
@@ -30,6 +32,8 @@ export function useUndo(): UndoState {
   const push = useCallback((label: string, undo: () => Promise<void>) => {
     setPending({ label, undo })
   }, [])
+
+  const clear = useCallback(() => setPending(null), [])
 
   const run = useCallback(async () => {
     if (!pending) return
@@ -49,5 +53,5 @@ export function useUndo(): UndoState {
 
   const clearToast = useCallback(() => setToast(null), [])
 
-  return { pending, toast, push, run, clearToast }
+  return { pending, toast, push, clear, run, clearToast }
 }

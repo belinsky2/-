@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { Bit, SetList } from '../../domain/domain'
-import type { Id } from '../../domain/identity'
 import { ROLE_LABEL, T } from '../labels'
 import { mmss } from './setlists'
 
@@ -90,6 +89,3 @@ export function StageScreen({ setList, bits, onFinish, onExit }: Props) {
     </div>
   )
 }
-
-export const stageBitIds = (s: SetList): Id[] =>
-  [...s.items].sort((a, b) => a.order - b.order).map((i) => i.bitId)

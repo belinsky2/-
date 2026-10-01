@@ -1,18 +1,22 @@
 import type { Clock, Id, SyncMeta } from '../domain/identity'
 import { generateId, isDeleted } from '../domain/identity'
-import type { Attitude, Bit, BitStatus, Punch, PunchTechnique, Topic } from '../domain/domain'
+import type {
+  Attitude, AudioClip, Bit, BitPerformance, BitStatus, BitVersion, Punch, PunchTechnique, Topic,
+} from '../domain/domain'
 import { EMPTY_ELEMENTS, assertPassionScore } from '../domain/domain'
 import { deservedStatus } from '../domain/lifecycle'
 import type { MutationSink } from './sink'
-import type { BitPerformance } from '../domain/domain'
-import { get, getAll, put, type StoreName } from './db'
+import { get, getAll, put } from './db'
+
+const alive = <T extends { meta: SyncMeta }>(rows: T[]) => rows.filter((r) => !isDeleted(r.meta))
 
 /**
- * Доступ к материалу. Возвращает предыдущее состояние записи там, где оно
- * нужно для отмены: кнопка «отменить» обязана уметь вернуть ровно то, что было,
- * а не пересобрать похожее.
+ * Материал: темы, шутки, их версии и записи голоса.
+ *
+ * Методы изменения возвращают прежнее состояние записи: отмена обязана
+ * вернуть ровно то, что было, а не пересобрать похожее.
  */
-export class Repo {
+export class MaterialStore {
   constructor(
     private readonly db: IDBDatabase,
     private readonly sink: MutationSink,
@@ -171,17 +175,68 @@ export class Repo {
     return prev
   }
 
+
+  // --- версии шутки -----------------------------------------------------
+
+  async versions(bitId: Id): Promise<BitVersion[]> {
+    const rows = await getAll<BitVersion>(this.db, 'versions')
+    return rows.filter((v) => v.bitId === bitId).sort((a, b) => b.takenAt - a.takenAt)
+  }
+
   /**
-   * Возврат записи к прежнему виду.
-   *
-   * Время, часы и устройство проставляются заново — отмена это тоже изменение,
-   * и при слиянии она обязана победить то, что отменяет. А вот признак
-   * удаления берётся из самой записи: отмена создания записывает надгробие,
-   * и если брать deletedAt из свежего штампа, где он всегда пуст, надгробие
-   * стирается и отменённая запись возвращается живой.
+   * Снимок перед изменением, но не чаще раза в пять минут: иначе история
+   * превращается в посимвольный лог и в ней нельзя ничего найти.
    */
-  async restore(store: StoreName, row: { id: Id; meta: SyncMeta }): Promise<void> {
-    const stamp = this.sink.stamp()
-    await put(this.db, store, { ...row, meta: { ...stamp, deletedAt: row.meta.deletedAt } })
+  async snapshot(bit: Bit): Promise<void> {
+    const now = this.clock()
+    const last = (await this.versions(bit.id))[0]
+    if (last && now - last.takenAt < 5 * 60 * 1000) return
+    const v: BitVersion = {
+      id: generateId(this.clock),
+      bitId: bit.id,
+      title: bit.title,
+      attitude: bit.attitude,
+      elements: bit.elements,
+      status: bit.status,
+      takenAt: now,
+      meta: this.sink.stamp(),
+    }
+    await put(this.db, 'versions', v)
+  }
+
+  // --- аудио ------------------------------------------------------------
+
+  async audioFor(bitId: Id | null, gigId: Id | null): Promise<AudioClip[]> {
+    const rows = await getAll<AudioClip>(this.db, 'audio')
+    return alive(rows)
+      .filter((a) => (bitId ? a.bitId === bitId : true) && (gigId ? a.gigId === gigId : true))
+      .sort((a, b) => b.meta.updatedAt - a.meta.updatedAt)
+  }
+
+  async addAudio(
+    bytes: Blob,
+    mimeType: string,
+    durationSec: number,
+    bitId: Id | null,
+    gigId: Id | null,
+  ): Promise<AudioClip> {
+    const clip: AudioClip = {
+      id: generateId(this.clock),
+      bitId,
+      gigId,
+      mimeType,
+      durationSec,
+      bytes,
+      meta: this.sink.stamp(),
+    }
+    await put(this.db, 'audio', clip)
+    return clip
+  }
+
+  async deleteAudio(id: Id): Promise<AudioClip | null> {
+    const prev = await get<AudioClip>(this.db, 'audio', id)
+    if (!prev) return null
+    await put(this.db, 'audio', { ...prev, meta: this.sink.tombstone() })
+    return prev
   }
 }

@@ -1,20 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import type { Bit, BitStatus } from '../domain/domain'
-import { TestClock, bit } from '../domain/fixtures'
+import type { Bit, BitStatus } from './domain'
+import { TestClock, bit } from './fixtures'
+import { setCandidates } from './setlist'
 
 /**
- * Отбор кандидатов в сет. Правило живёт в экране, поэтому проверяется здесь
- * же по той же формуле: кандидат — шутка, у которой есть добивка.
+ * Отбор кандидатов в сет. Прежняя версия этого теста держала собственную
+ * копию формулы и проверяла её, а не код экрана: сломай формулу на экране —
+ * тест остался бы зелёным. Теперь формула живёт в домене, тест зовёт её же.
  */
-const RANK: Record<string, number> = { POLISHED: 3, TESTED: 2, DRAFT: 1 }
-
-function candidates(bits: Bit[], used: Set<string>, scores: Map<string, number>): Bit[] {
-  return bits
-    .filter((b) => !used.has(b.id) && RANK[b.status] !== undefined)
-    .sort((a, b) =>
-      (RANK[b.status]! - RANK[a.status]!) || ((scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0)),
-    )
-}
+const candidates = setCandidates
 
 const t = new TestClock()
 const make = (id: string, status: BitStatus): Bit => bit(t.clock, { id, status })

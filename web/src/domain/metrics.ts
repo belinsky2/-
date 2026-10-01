@@ -115,13 +115,36 @@ export function bottleneck(p: Progress): BitStatus | null {
 
 const MILLIS_PER_DAY = 24 * 60 * 60 * 1000
 
+/** Номер суток в календаре, который видит человек, а не в календаре Гринвича. */
+export type DayOf = (ms: number) => number
+
+/**
+ * Сутки по часам устройства.
+ *
+ * Прежняя версия делила время на длину суток и получала сутки по Гринвичу:
+ * в Ханое (UTC+7) они переламывались в 7 утра, и запись вчера вечером и
+ * сегодня рано утром считалась одним днём.
+ */
+export const deviceDayOf: DayOf = (ms) => {
+  const d = new Date(ms)
+  return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / MILLIS_PER_DAY)
+}
+
+/** Сутки для явно заданного смещения от Гринвича — для проверок без зависимости от часов машины. */
+export function localDayOf(offsetMinutes: number): DayOf {
+  return (ms) => Math.floor((ms + offsetMinutes * 60_000) / MILLIS_PER_DAY)
+}
+
 /**
  * Цепочка Сайнфелда: сколько дней подряд была хоть какая-то работа.
  * Сегодняшний пропуск цепочку ещё не рвёт — день не кончился.
  */
-export function streakDays(activeDayMillis: readonly number[], nowMillis: number): number {
+export function streakDays(
+  activeDayMillis: readonly number[],
+  nowMillis: number,
+  dayOf: DayOf = deviceDayOf,
+): number {
   if (activeDayMillis.length === 0) return 0
-  const dayOf = (ms: number) => Math.floor(ms / MILLIS_PER_DAY)
   const days = new Set(activeDayMillis.map(dayOf))
   const today = dayOf(nowMillis)
 

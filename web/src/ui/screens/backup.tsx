@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import type { ImportReport } from '../../store/backup'
 import { HELP } from '../help'
 import { T } from '../labels'
 import { count } from '../plural'
@@ -9,7 +10,7 @@ interface Props {
   persistent: boolean
   lastBackupAt: number | null
   onExport: () => void
-  onImport: (file: File) => Promise<void>
+  onImport: (file: File) => Promise<ImportReport>
   onExportMarkdown: () => void
 }
 
@@ -22,6 +23,7 @@ export function BackupScreen(
   { bitCount, topicCount, persistent, lastBackupAt, onExport, onImport, onExportMarkdown }: Props,
 ) {
   const [chosen, setChosen] = useState<string | null>(null)
+  const [report, setReport] = useState<ImportReport | null>(null)
 
   const when = lastBackupAt
     ? new Date(lastBackupAt).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
@@ -32,7 +34,7 @@ export function BackupScreen(
       {/* Общая карта приложения. В настройках, потому что сюда заходят,
           когда что-то ищут, а не когда работают над шуткой. */}
       <div class="card" data-testid="guide">
-        <h2>{HELP.backup!.title}</h2>
+        <h2>{T.guideTitle}</h2>
         {HELP.backup!.lines.map((line, i) => (
           <p key={i} class="hint" style={i === 0 ? 'margin-top:0' : ''}>{line}</p>
         ))}
@@ -64,11 +66,20 @@ export function BackupScreen(
               const f = (e.target as HTMLInputElement).files?.[0]
               if (!f) return
               setChosen(f.name)
-              void onImport(f)
+              setReport(null)
+              void onImport(f).then(setReport)
             }}
           />
         </label>
         <p class="hint">{chosen ?? T.backupNoFile}</p>
+        {/* Итог восстановления виден, а не молчалив: человек должен знать,
+            что из архива пришло, а что на устройстве оказалось свежее. */}
+        {report && (
+          <p class="hint" data-testid="import-report">
+            {report.ok ? T.importDone(report.added, report.updated, report.kept) : T.importFailed(report.reason)}
+            {report.ok && report.kept > 0 && <><br />{T.importKeptHint}</>}
+          </p>
+        )}
       </div>
 
       {/* Версия сборки. Нужна ровно для одного: чтобы проверить, дошла ли до

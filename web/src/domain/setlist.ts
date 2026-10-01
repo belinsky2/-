@@ -89,3 +89,27 @@ export function validateSetList(
 
   return issues
 }
+
+/**
+ * Кандидаты в сет: шутки, у которых есть панчлайн, — их уже можно рассказать.
+ *
+ * Обкатанного требовать нельзя: обкатанной шутка становится после
+ * выступления, а выступление собирают по сету, и первый сет оказывался
+ * несобираемым. Зерно и премиса не проходят — рассказывать там пока нечего.
+ * Проверенное залом стоит выше, внутри статуса — по среднему результату.
+ */
+const CANDIDATE_RANK: Partial<Record<Bit['status'], number>> = { POLISHED: 3, TESTED: 2, DRAFT: 1 }
+
+export function setCandidates(
+  bits: readonly Bit[],
+  usedBitIds: ReadonlySet<Id>,
+  averageScoreByBit: ReadonlyMap<Id, number>,
+): Bit[] {
+  return bits
+    .filter((b) => !usedBitIds.has(b.id) && CANDIDATE_RANK[b.status] !== undefined)
+    .sort(
+      (a, b) =>
+        CANDIDATE_RANK[b.status]! - CANDIDATE_RANK[a.status]! ||
+        (averageScoreByBit.get(b.id) ?? 0) - (averageScoreByBit.get(a.id) ?? 0),
+    )
+}

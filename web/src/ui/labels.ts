@@ -127,6 +127,13 @@ export const T = {
   backupCounts: 'В архиве:',
   backupChooseFile: 'Выбрать файл архива',
   backupNoFile: 'Файл не выбран',
+  guideTitle: 'Где что лежит',
+  importNotReady: 'хранилище ещё открывается, попробуй через секунду',
+  importDone: (added: number, updated: number, kept: number) =>
+    `Из архива: новых записей ${added}, обновлено ${updated}, оставлено как было ${kept}.`,
+  importKeptHint: 'Где на устройстве версия свежее архивной, оставлена твоя.',
+  importFailed: (reason: string) => `Не восстановлено: ${reason}.`,
+  mdAct: 'Мой акт',
 
   // --- сегодня ---
   tabToday: 'Сегодня',
@@ -259,6 +266,7 @@ export const UNDO_LABEL = {
   audioDeleted: 'удаление записи голоса',
   tagAdded: (tag: string) => `тег «${tag}»`,
   tagRemoved: (tag: string) => `удаление тега «${tag}»`,
+  tagsChanged: 'теги',
   statusSet: (s: BitStatus) => `статус «${STATUS_LABEL[s]}»`,
   topicAdded: 'добавление темы',
   topicDeleted: 'удаление темы',

@@ -3,8 +3,8 @@ import 'fake-indexeddb/auto'
 import { buildVault, decodeRow, inspectVault } from './backup'
 import { getAll, openDb, putAll, type StoreName } from './db'
 import { MutationSink } from './sink'
-import { Repo } from './repo'
-import { Repo2 } from './repo2'
+import { MaterialStore } from './material'
+import { restoreRow } from './restore'
 import type { Bit, Topic } from '../domain/domain'
 import { isDeleted } from '../domain/identity'
 
@@ -22,7 +22,7 @@ describe('перенос материала между устройствами'
   it('архив переносит шутки, темы и удаления', async () => {
     const oldPhone = await freshDb(`old-${Math.random()}`)
     const sinkA = new MutationSink(clock, 'phone-a')
-    const repoA = new Repo(oldPhone, sinkA, clock)
+    const repoA = new MaterialStore(oldPhone, sinkA, clock)
 
     const topic = await repoA.addTopic('Лифты')
     const kept = await repoA.addBit('В лифте все смотрят вверх', topic.id)
@@ -39,7 +39,7 @@ describe('перенос материала между устройствами'
     // --- новый телефон ---
     const newPhone = await freshDb(`new-${Math.random()}`)
     const sinkB = new MutationSink(clock, 'phone-b')
-    const repoB = new Repo(newPhone, sinkB, clock)
+    const repoB = new MaterialStore(newPhone, sinkB, clock)
 
     for (const [store, rows] of Object.entries(vault.data)) {
       await putAll(newPhone, store as StoreName, rows.map(decodeRow))
@@ -64,13 +64,13 @@ describe('перенос материала между устройствами'
   it('отмена создания убирает запись, а не воскрешает её', async () => {
     const db = await freshDb(`undo-${Math.random()}`)
     const sink = new MutationSink(clock, 'phone-a')
-    const repo = new Repo(db, sink, clock)
+    const repo = new MaterialStore(db, sink, clock)
 
     const topic = await repo.addTopic('Лишняя тема')
     expect(await repo.topics()).toHaveLength(1)
 
     // Отмена создания — это надгробие поверх свежесозданной записи.
-    await repo.restore('topics', { ...topic, meta: { ...topic.meta, deletedAt: topic.meta.updatedAt } })
+    await restoreRow(db, sink, 'topics', { ...topic, meta: { ...topic.meta, deletedAt: topic.meta.updatedAt } })
 
     expect(await repo.topics()).toHaveLength(0)
     const raw = (await getAll<Topic>(db, 'topics'))[0]!
@@ -82,13 +82,13 @@ describe('перенос материала между устройствами'
   it('отмена правки возвращает прежнее содержимое и не хоронит запись', async () => {
     const db = await freshDb(`undo2-${Math.random()}`)
     const sink = new MutationSink(clock, 'phone-a')
-    const repo = new Repo(db, sink, clock)
+    const repo = new MaterialStore(db, sink, clock)
 
     const b = await repo.addBit('Шутка')
     const before = await repo.setPunch(b.id, 'первая добивка', 'TURN')
     await repo.setPunch(b.id, 'вторая добивка', 'MIX')
 
-    await repo.restore('bits', before!)
+    await restoreRow(db, sink, 'bits', before!)
 
     const restored = (await repo.bits())[0]!
     expect(restored.elements.punch).toBeNull()
@@ -98,11 +98,11 @@ describe('перенос материала между устройствами'
   it('запись голоса переживает архив, а не превращается в пустоту', async () => {
     const db = await freshDb(`audio-${Math.random()}`)
     const sink = new MutationSink(clock, 'phone-a')
-    const repo2 = new Repo2(db, sink, clock)
+    const material = new MaterialStore(db, sink, clock)
 
     const original = new Blob([new Uint8Array([1, 2, 3, 250, 251, 252])], { type: 'audio/webm' })
     const bitId = 'bit-1'
-    await repo2.addAudio(original, 'audio/webm', 12, bitId, null)
+    await material.addAudio(original, 'audio/webm', 12, bitId, null)
 
     // Через JSON, как это и происходит при настоящем экспорте и импорте.
     const vault = await buildVault(db, 'phone-a', sink.current(), clock())
@@ -110,12 +110,12 @@ describe('перенос материала между устройствами'
 
     const target = await freshDb(`audio2-${Math.random()}`)
     const sink2 = new MutationSink(clock, 'phone-b')
-    const repo2b = new Repo2(target, sink2, clock)
+    const materialB = new MaterialStore(target, sink2, clock)
     for (const [store, rows] of Object.entries(round.data)) {
       await putAll(target, store as StoreName, (rows as unknown[]).map(decodeRow))
     }
 
-    const clips = await repo2b.audioFor(bitId, null)
+    const clips = await materialB.audioFor(bitId, null)
     expect(clips).toHaveLength(1)
     expect(clips[0]!.durationSec).toBe(12)
     expect(clips[0]!.bytes).toBeInstanceOf(Blob)
@@ -131,7 +131,7 @@ describe('перенос материала между устройствами'
     sink.observe(500)
     expect(sink.current()).toBe(501)
 
-    const repo = new Repo(db, sink, clock)
+    const repo = new MaterialStore(db, sink, clock)
     const t = await repo.addTopic('После импорта')
     // Свежая правка обязана победить всё, что приехало в архиве.
     expect(t.meta.lamport).toBeGreaterThan(500)
@@ -140,7 +140,7 @@ describe('перенос материала между устройствами'
   it('правка после импорта не проигрывает привезённой записи', async () => {
     const db = await freshDb(`win-${Math.random()}`)
     const sink = new MutationSink(clock, 'phone-b')
-    const repo = new Repo(db, sink, clock)
+    const repo = new MaterialStore(db, sink, clock)
 
     const foreign: Topic = {
       id: 'topic-x', title: 'Привезённая', passionScore: 0, isCore: false,

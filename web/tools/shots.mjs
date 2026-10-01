@@ -101,9 +101,12 @@ check('нет горизонтальной прокрутки в мастерс�
 await page.fill('[data-testid=premise-input]', 'Самое тяжёлое в лифте — это тишина')
 await page.click('[data-testid=premise-save]')
 await page.waitForSelector('[data-testid=premise-save][data-saved="1"]')
+// Техника выбирается раньше, чем написан панчлайн: прежде такой выбор молча
+// терялся. Проверка «техника пережила перезагрузку» ниже ловит именно это.
+await page.click('[data-testid=technique-LIST_OF_THREE]')
 await page.fill('[data-testid=punch-input]', 'Мы все делаем вид, что этаж — это очень интересно')
 await page.click('[data-testid=punch-save]')
-await page.click('[data-testid=technique-LIST_OF_THREE]')
+await page.waitForSelector('[data-testid=punch-save][data-saved="1"]')
 await page.fill('[data-testid=actout-input]', 'Задираю голову и считаю этажи')
 await page.click('[data-testid=actout-save]')
 // --- голос ---
@@ -227,6 +230,18 @@ await page.waitForFunction(() =>
 check('отметка зала пересчитывает laugh score', true)
 await shot('review')
 
+// Первая отметка обязана отменяться и называться своим именем. Прежде отмена
+// для неё не регистрировалась, и полоса предлагала откатить предыдущее действие.
+const markUndo = await page.textContent('[data-testid=undobar]')
+check('отмена первой отметки названа отметкой', markUndo.includes('хохот'), `текст: ${markUndo}`)
+await page.click('[data-testid=undo]')
+await page.waitForFunction(() =>
+  document.querySelector('[data-testid=review-score]')?.textContent?.includes('0.00'))
+check('отмена первой отметки возвращает счёт', true)
+await page.click('[data-testid=review-row] [data-testid=mark-BIG_LAUGH]')
+await page.waitForFunction(() =>
+  document.querySelector('[data-testid=review-score]')?.textContent?.includes('3.00'))
+
 // Отмеченная шутка обязана стать кандидатом в сет.
 await page.click('[data-testid=back]')
 await page.click('[data-testid=set-item]')
@@ -300,6 +315,17 @@ const vault = await Promise.all([
   page.click('[data-testid=backup-export]'),
 ]).then(([d]) => d)
 check('архив — один файл .json', vault.suggestedFilename().endsWith('.json'))
+
+// Тот же архив обратно: всё на устройстве уже такое же или свежее,
+// поэтому ничего не должно быть перезаписано, и человеку это видно.
+await page.setInputFiles('[data-testid=backup-import]', await vault.path())
+await page.waitForSelector('[data-testid=import-report]')
+await page.locator('[data-testid=import-report]').scrollIntoViewIfNeeded()
+await shot('backup-import')
+const importText = await page.textContent('[data-testid=import-report]')
+check('итог восстановления показан', importText.includes('Из архива'), `текст: ${importText}`)
+check('восстановление не перезаписывает то, что на устройстве не старше архива',
+  importText.includes('обновлено 0'), `текст: ${importText}`)
 
 const md = await Promise.all([
   page.waitForEvent('download'),

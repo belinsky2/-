@@ -23,8 +23,8 @@ export interface MarkdownLabels {
   readonly role: (r: SetList['items'][number]['role']) => string
 }
 
-function bitBlock(b: Bit, L: MarkdownLabels): string {
-  const out: string[] = [`### ${b.title}`, '', `*${L.status(b.status)}*`]
+function bitBlock(b: Bit, L: MarkdownLabels, level: string): string {
+  const out: string[] = [`${level} ${b.title}`, '', `*${L.status(b.status)}*`]
   if (b.attitude) out.push(`- Отношение: ${L.attitude(b.attitude)}`)
   if (b.elements.premise) out.push(`- Премиса: ${b.elements.premise}`)
   if (b.elements.setup) out.push(`- Подводка: ${b.elements.setup}`)
@@ -64,13 +64,15 @@ export function exportMarkdown(
     const key = live(topics).find((t) => t.id === b.topicId)?.title ?? L.noTopic
     grouped.set(key, [...(grouped.get(key) ?? []), b])
   }
+  // Темы — подразделы материала, шутки — внутри тем. Прежде темы стояли на
+  // одном уровне с разделами, и оглавление документа разваливалось.
   for (const [topic, list] of grouped) {
-    out.push(`## ${topic}`, '')
-    for (const b of list) out.push(bitBlock(b, L))
+    out.push(`### ${topic}`, '')
+    for (const b of list) out.push(bitBlock(b, L, '####'))
   }
 
   out.push(`## ${L.act}`, '')
-  for (const b of bitsAlive.filter((b) => b.status === 'POLISHED')) out.push(bitBlock(b, L))
+  for (const b of bitsAlive.filter((b) => b.status === 'POLISHED')) out.push(bitBlock(b, L, '###'))
 
   out.push(`## ${L.setLists}`, '')
   for (const s of live(setLists)) {

@@ -1,32 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import type {
-  Attitude, AudioClip, Bit, BitPerformance, ExerciseRecord, Gig, GigType, JournalEntry,
-  LaughResult, PunchTechnique, SetList, SetListRole, Settings, Topic,
-} from '../domain/domain'
-import { systemClock, type DeviceId, type Id, type SyncMeta } from '../domain/identity'
-import { averageScoreByBit, actOutRatio, attitudeSpread, funnel, polishedMinutes, streakDays, type Progress } from '../domain/metrics'
-import { exportMarkdown, searchBits } from '../domain/markdown'
-import { openDb, putAll, requestPersistence, type StoreName } from '../store/db'
-import { MutationSink } from '../store/sink'
-import { Repo } from '../store/repo'
-import { Repo2 } from '../store/repo2'
-import { backupDue, buildVault, decodeRow, downloadVault, inspectVault } from '../store/backup'
-import { loadExercises, type Exercise } from '../store/exercises'
-import { ATTITUDE_LABEL, ROLE_LABEL, STATUS_LABEL, T, TECHNIQUE_LABEL, UNDO_LABEL } from './labels'
+import { useEffect, useState } from 'preact/hooks'
+import type { AudioClip } from '../domain/domain'
+import type { Id } from '../domain/identity'
 import { HELP } from './help'
-import { useUndo } from './undo'
-import { InboxScreen } from './screens/inbox'
-import { TopicsScreen } from './screens/topics'
-import { WorkshopScreen } from './screens/workshop'
+import { T } from './labels'
+import { useAppData } from './state/data'
+import { useBackup } from './state/backup'
+import { useCommands } from './state/commands'
+import { useUndo } from './state/undo'
 import { BackupScreen } from './screens/backup'
-import { TodayScreen } from './screens/today'
-import { PracticeScreen } from './screens/practice'
-import { SetListsScreen, SetListEditor } from './screens/setlists'
-import { StageScreen } from './screens/stage'
-import { GigsScreen, GigReviewScreen } from './screens/gigs'
+import { GigReviewScreen, GigsScreen } from './screens/gigs'
 import { JournalScreen } from './screens/journal'
+import { MaterialScreen } from './screens/material'
+import { PracticeScreen } from './screens/practice'
+import { SetListEditor, SetListsScreen } from './screens/setlists'
+import { StageScreen } from './screens/stage'
+import { TodayScreen } from './screens/today'
+import { WorkshopScreen } from './screens/workshop'
 
 type Tab = 'today' | 'practice' | 'material' | 'sets' | 'journal'
+
+/** Экран поверх вкладок. Вкладки — разделы тетради, оверлеи — работа внутри них. */
 type Overlay =
   | { kind: 'none' }
   | { kind: 'bit'; id: Id }
@@ -35,282 +28,75 @@ type Overlay =
   | { kind: 'review'; id: Id }
   | { kind: 'settings' }
 
-const DEVICE_KEY = 'punchline.deviceId'
-const LAMPORT_KEY = 'punchline.lamport'
-const BACKUP_KEY = 'punchline.lastBackupAt'
-const CHANGES_KEY = 'punchline.changesSinceBackup'
+const TABS: readonly [Tab, string][] = [
+  ['today', T.tabToday],
+  ['practice', T.tabPractice],
+  ['material', T.tabMaterial],
+  ['sets', T.tabSets],
+  ['journal', T.tabJournal],
+]
 
-function deviceId(): DeviceId {
-  let v = localStorage.getItem(DEVICE_KEY)
-  if (!v) {
-    v = crypto.randomUUID()
-    localStorage.setItem(DEVICE_KEY, v)
-  }
-  return v
+const HELP_KEY: Record<Overlay['kind'], string | null> = {
+  none: null, bit: 'workshop', set: 'sets', stage: 'stage', review: 'review', settings: 'backup',
 }
 
-interface Snapshot {
-  bits: Bit[]
-  topics: Topic[]
-  setLists: SetList[]
-  gigs: Gig[]
-  performances: BitPerformance[]
-  journal: JournalEntry[]
-  exerciseRecords: ExerciseRecord[]
-  settings: Settings | null
-}
-
-const EMPTY: Snapshot = {
-  bits: [], topics: [], setLists: [], gigs: [], performances: [],
-  journal: [], exerciseRecords: [], settings: null,
-}
-
+/**
+ * Каркас приложения: шапка, справка, отмена, вкладки и переходы между экранами.
+ * Данные живут в state/data, изменения — в state/commands, архив — в state/backup.
+ */
 export function App() {
-  const [db, setDb] = useState<IDBDatabase | null>(null)
-  const [sink, setSink] = useState<MutationSink | null>(null)
-  const [repo, setRepo] = useState<Repo | null>(null)
-  const [repo2, setRepo2] = useState<Repo2 | null>(null)
-  const [data, setData] = useState<Snapshot>(EMPTY)
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [clips, setClips] = useState<AudioClip[]>([])
+  const app = useAppData()
+  const backup = useBackup(app)
+  const undo = useUndo()
+  const cmd = useCommands(app, backup, undo)
+
   const [tab, setTab] = useState<Tab>('today')
   const [overlay, setOverlay] = useState<Overlay>({ kind: 'none' })
-  const [query, setQuery] = useState('')
   const [helpOpen, setHelpOpen] = useState(false)
-  const [persistent, setPersistent] = useState(false)
-  const [lastBackupAt, setLastBackupAt] = useState<number | null>(
-    Number(localStorage.getItem(BACKUP_KEY)) || null,
-  )
-  const changesSinceBackup = useRef(Number(localStorage.getItem(CHANGES_KEY)) || 0)
-  const undo = useUndo()
+  const [clips, setClips] = useState<AudioClip[]>([])
+
+  const { data } = app
+  const openBit = overlay.kind === 'bit' ? data.bits.find((b) => b.id === overlay.id) ?? null : null
+  const openSet = overlay.kind === 'set' || overlay.kind === 'stage'
+    ? data.setLists.find((s) => s.id === overlay.id) ?? null
+    : null
+  const openGig = overlay.kind === 'review' ? data.gigs.find((g) => g.id === overlay.id) ?? null : null
 
   useEffect(() => {
-    void (async () => {
-      const database = await openDb()
-      const s = new MutationSink(systemClock, deviceId(), Number(localStorage.getItem(LAMPORT_KEY)) || 0)
-      setDb(database)
-      setSink(s)
-      setRepo(new Repo(database, s, systemClock))
-      setRepo2(new Repo2(database, s, systemClock))
-      setPersistent(await requestPersistence())
-      // Каталог упражнений — статический файл, а не часть базы: он от книги,
-      // а не от автора, и обновляется вместе с приложением.
-      setExercises(await loadExercises().catch(() => []))
-    })()
-  }, [])
-
-  const reload = useCallback(async (r: Repo, r2: Repo2, s: MutationSink) => {
-    const [bits, topics, setLists, gigs, performances, journal, exerciseRecords, settings] =
-      await Promise.all([
-        r.bits(), r.topics(), r2.setLists(), r2.gigs(), r2.performances(),
-        r2.journal(), r2.exercises(), r2.settings(),
-      ])
-    setData({ bits, topics, setLists, gigs, performances, journal, exerciseRecords, settings })
-    localStorage.setItem(LAMPORT_KEY, String(s.current()))
-  }, [])
-
-  useEffect(() => {
-    if (repo && repo2 && sink) void reload(repo, repo2, sink)
-  }, [repo, repo2, sink, reload])
-
-  async function exportVault() {
-    if (!db || !sink) return
-    const now = Date.now()
-    downloadVault(await buildVault(db, deviceId(), sink.current(), now))
-    localStorage.setItem(BACKUP_KEY, String(now))
-    changesSinceBackup.current = 0
-    localStorage.setItem(CHANGES_KEY, '0')
-    setLastBackupAt(now)
-  }
-
-  /** Любое изменение проходит здесь: перечитать данные и подписать отмену. */
-  const commit = useCallback(
-    async (
-      label: string,
-      run: () => Promise<{ store: StoreName; row: { id: Id; meta: SyncMeta } } | null>,
-    ) => {
-      if (!repo || !repo2 || !sink) return
-      const prev = await run()
-      await reload(repo, repo2, sink)
-
-      changesSinceBackup.current += 1
-      localStorage.setItem(CHANGES_KEY, String(changesSinceBackup.current))
-      if (backupDue(changesSinceBackup.current, lastBackupAt, Date.now())) await exportVault()
-
-      if (prev) {
-        undo.push(label, async () => {
-          await repo.restore(prev.store, prev.row)
-          await reload(repo, repo2, sink)
-        })
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [repo, repo2, sink, reload, undo, lastBackupAt],
-  )
-
-  /** Создание: отмена кладёт надгробие поверх свежей записи. */
-  const commitCreate = useCallback(
-    <R extends { id: Id; meta: SyncMeta }>(label: string, store: StoreName, make: () => Promise<R>) =>
-      commit(label, async () => {
-        const row = await make()
-        return { store, row: { ...row, meta: { ...row.meta, deletedAt: row.meta.updatedAt } } }
-      }),
-    [commit],
-  )
-
-  const scores = useMemo(() => averageScoreByBit(data.performances), [data.performances])
-
-  const progress: Progress = useMemo(() => {
-    const activity = [
-      ...data.bits.map((b) => b.meta.updatedAt),
-      ...data.journal.map((j) => j.dayMillis),
-      ...data.gigs.map((g) => g.dateMillis),
-    ]
-    return {
-      funnel: funnel(data.bits),
-      polishedMinutes: polishedMinutes(data.bits),
-      goalMinutes: data.settings?.goalMinutes ?? 5,
-      actOutRatio: actOutRatio(data.bits),
-      attitudeSpread: attitudeSpread(data.bits),
-      gigsLast30Days: repo2 ? repo2.gigsLast30Days(data.gigs) : 0,
-      streakDays: streakDays(activity, Date.now()),
-    }
-  }, [data, repo2])
-
-  useEffect(() => {
-    // Записи тяжёлые, поэтому подтягиваются только для открытой шутки,
-    // а не вместе со всем материалом.
-    if (!repo2 || overlay.kind !== 'bit') { setClips([]); return }
-    // Не обнуляем список перед запросом: иначе при каждой правке шутки
-    // записи на мгновение пропадают с экрана и появляются обратно.
+    // Записи тяжёлые, поэтому подтягиваются только для открытой шутки.
+    // Список не обнуляется перед запросом: иначе при каждой правке записи
+    // на мгновение пропадали бы с экрана.
+    if (!app.stores || overlay.kind !== 'bit') { setClips([]); return }
     let cancelled = false
-    void repo2.audioFor(overlay.id, null).then((list) => { if (!cancelled) setClips(list) })
+    void app.stores.material.audioFor(overlay.id, null).then((l) => { if (!cancelled) setClips(l) })
     return () => { cancelled = true }
-  }, [repo2, overlay, data.bits])
+  }, [app.stores, overlay, data.bits])
 
-  const openBit = useMemo(
-    () => (overlay.kind === 'bit' ? data.bits.find((b) => b.id === overlay.id) ?? null : null),
-    [overlay, data.bits],
-  )
-  const openSet = useMemo(
-    () => (overlay.kind === 'set' || overlay.kind === 'stage'
-      ? data.setLists.find((s) => s.id === overlay.id) ?? null
-      : null),
-    [overlay, data.setLists],
-  )
-  const openGig = useMemo(
-    () => (overlay.kind === 'review' ? data.gigs.find((g) => g.id === overlay.id) ?? null : null),
-    [overlay, data.gigs],
-  )
+  if (!cmd) return <div class="empty">…</div>
 
-  const bitActions = useMemo(() => {
-    if (!repo || !repo2) return null
-    const edit = (label: string, fn: (id: Id) => Promise<Bit | null>) => async () => {
-      if (overlay.kind !== 'bit') return
-      const before = data.bits.find((b) => b.id === overlay.id)
-      if (before) await repo2.snapshot(before)
-      await commit(label, async () => {
-        const prev = await fn(overlay.id)
-        return prev ? { store: 'bits' as const, row: prev } : null
-      })
-    }
-    return {
-      setTitle: (v: string) => edit(UNDO_LABEL.titleSet, (id) => repo.setTitle(id, v))(),
-      setAttitude: (a: Attitude | null) =>
-        edit(a ? UNDO_LABEL.attitudeSet(a) : UNDO_LABEL.attitudeCleared, (id) => repo.setAttitude(id, a))(),
-      setPremise: (v: string) => edit(UNDO_LABEL.premiseSet, (id) => repo.setPremise(id, v))(),
-      setSetup: (v: string) => edit(UNDO_LABEL.setupSet, (id) => repo.setSetup(id, v))(),
-      setPunch: (v: string, t: PunchTechnique) => edit(UNDO_LABEL.punchSet, (id) => repo.setPunch(id, v, t))(),
-      setActOut: (v: string, space: boolean) =>
-        edit(UNDO_LABEL.actOutSet, (id) => repo.setActOut(id, v, space))(),
-      setDuration: (sec: number | null) =>
-        edit(UNDO_LABEL.durationOfBit, (id) => repo.setDuration(id, sec))(),
-      setTopic: (topicId: Id | null) =>
-        edit(UNDO_LABEL.topicSet, (id) => repo.setTopic(id, topicId))(),
-      setTags: (tags: string[]) => {
-        const before = openBit?.elements.tags ?? []
-        const added = tags.find((x) => !before.includes(x))
-        const removed = before.find((x) => !tags.includes(x))
-        const label = added ? UNDO_LABEL.tagAdded(added)
-          : removed ? UNDO_LABEL.tagRemoved(removed)
-          : UNDO_LABEL.titleSet
-        return edit(label, (id) => repo.setTags(id, tags))()
-      },
-    }
-  }, [repo, repo2, overlay, openBit, commit, data.bits])
-
-  async function importVault(file: File) {
-    if (!db || !repo || !repo2 || !sink) return
-    const parsed: unknown = JSON.parse(await file.text())
-    const check = inspectVault(parsed)
-    if (!check.ok) {
-      alert(check.reason)
-      return
-    }
-    const rows = (parsed as { data: Record<string, unknown[]> }).data
-    for (const [store, list] of Object.entries(rows)) {
-      await putAll(db, store as StoreName, list.map(decodeRow))
-      for (const r of list) {
-        const m = (r as { meta?: { lamport?: number } }).meta
-        if (m?.lamport !== undefined) sink.observe(m.lamport)
-      }
-    }
-    await reload(repo, repo2, sink)
-  }
-
-  function doExport() {
-    const md = exportMarkdown(
-      {
-        title: T.appName, topics: T.tabTopics, material: T.tabMaterial, act: 'Мой акт',
-        setLists: T.setsTitle, journal: T.journalTitle, noTopic: T.noTopic,
-        status: (s) => STATUS_LABEL[s], attitude: (a) => ATTITUDE_LABEL[a],
-        technique: (t) => TECHNIQUE_LABEL[t], role: (r: SetListRole) => ROLE_LABEL[r],
-      },
-      data.topics, data.bits, data.setLists, data.journal,
-    )
-    const url = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'punchline.md'
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 10_000)
-  }
-
-  if (!repo || !repo2 || !bitActions) return <div class="empty">…</div>
-
-  // --- полноэкранные режимы --------------------------------------------
+  const go = (o: Overlay) => { setOverlay(o); setHelpOpen(false) }
 
   if (overlay.kind === 'stage' && openSet) {
     return (
       <StageScreen
         setList={openSet}
         bits={data.bits}
-        onExit={() => setOverlay({ kind: 'set', id: openSet.id })}
+        onExit={() => go({ kind: 'set', id: openSet.id })}
         onFinish={async (elapsed) => {
-          const gig = await repo2.addGig(openSet.id, 'OPEN_MIC', openSet.title)
-          await repo2.setGigDuration(gig.id, elapsed)
-          await reload(repo, repo2, sink!)
-          setOverlay({ kind: 'review', id: gig.id })
+          const gigId = await cmd.stage.finishStage(openSet.id, openSet.title, elapsed)
+          if (gigId) go({ kind: 'review', id: gigId })
         }}
       />
     )
   }
 
-  const helpKey =
-    overlay.kind === 'bit' ? 'workshop'
-    : overlay.kind === 'set' ? 'sets'
-    : overlay.kind === 'review' ? 'review'
-    : overlay.kind === 'settings' ? 'backup'
-    : tab
-  const help = HELP[helpKey]
-
-  const found = query.trim() ? searchBits(data.bits, query) : null
+  const help = HELP[HELP_KEY[overlay.kind] ?? tab]
 
   return (
     <div class="app">
       <div class="topbar">
         {overlay.kind !== 'none' && (
-          <button data-testid="back" onClick={() => { setOverlay({ kind: 'none' }); setHelpOpen(false) }}>←</button>
+          <button data-testid="back" onClick={() => go({ kind: 'none' })}>←</button>
         )}
         <span class="grow">{help?.title ?? T.appName}</span>
         <button
@@ -338,197 +124,110 @@ export function App() {
         </div>
       )}
 
-      {overlay.kind === 'bit' && openBit ? (
-        <WorkshopScreen
-          bit={openBit}
-          topics={data.topics}
-          actions={bitActions}
-          clips={clips}
-          onRecord={(blob, mime, sec) =>
-            void commitCreate(UNDO_LABEL.audioAdded, 'audio', () =>
-              repo2.addAudio(blob, mime, sec, openBit.id, null))}
-          onDeleteClip={(id) =>
-            void commit(UNDO_LABEL.audioDeleted, async () => {
-              const prev = await repo2.deleteAudio(id)
-              return prev ? { store: 'audio', row: prev } : null
-            })}
-          onBack={() => setOverlay({ kind: 'none' })}
-        />
+      {openBit ? (
+        (() => {
+          const b = cmd.material.bit(openBit)
+          return (
+            <WorkshopScreen
+              bit={openBit}
+              topics={data.topics}
+              actions={b}
+              clips={clips}
+              onRecord={(blob, mime, sec) => void b.addAudio(blob, mime, sec)}
+              onDeleteClip={(id) => void b.deleteAudio(id)}
+              onBack={() => go({ kind: 'none' })}
+            />
+          )
+        })()
       ) : overlay.kind === 'set' && openSet ? (
-        <SetListEditor
-          setList={openSet}
-          bits={data.bits}
-          scores={scores}
-          onAddBit={(bitId, dur) =>
-            void commit(UNDO_LABEL.setChanged, async () => {
-              const prev = await repo2.addToSetList(openSet.id, bitId, dur)
-              return prev ? { store: 'setLists', row: prev } : null
-            })}
-          onRemove={(itemId) =>
-            void commit(UNDO_LABEL.setChanged, async () => {
-              const prev = await repo2.removeFromSetList(openSet.id, itemId)
-              return prev ? { store: 'setLists', row: prev } : null
-            })}
-          onRole={(itemId, role) =>
-            void commit(UNDO_LABEL.roleSet(role), async () => {
-              const prev = await repo2.setItemRole(openSet.id, itemId, role)
-              return prev ? { store: 'setLists', row: prev } : null
-            })}
-          onMove={(itemId, delta) =>
-            void commit(UNDO_LABEL.orderChanged, async () => {
-              const prev = await repo2.moveItem(openSet.id, itemId, delta)
-              return prev ? { store: 'setLists', row: prev } : null
-            })}
-          onTarget={(sec) =>
-            void commit(UNDO_LABEL.targetSet, async () => {
-              const prev = await repo2.setTargetDuration(openSet.id, sec)
-              return prev ? { store: 'setLists', row: prev } : null
-            })}
-          onStage={() => setOverlay({ kind: 'stage', id: openSet.id })}
-          onDelete={() => {
-            void commit(UNDO_LABEL.setDeleted, async () => {
-              const prev = await repo2.deleteSetList(openSet.id)
-              return prev ? { store: 'setLists', row: prev } : null
-            })
-            setOverlay({ kind: 'none' })
-          }}
-        />
-      ) : overlay.kind === 'review' && openGig ? (
-        <GigReviewScreen
-          gig={openGig}
-          setList={data.setLists.find((s) => s.id === openGig.setListId) ?? null}
-          bits={data.bits}
-          performances={data.performances}
-          onMark={(bitId, result: LaughResult) =>
-            void commit(UNDO_LABEL.marked(result), async () => {
-              const prev = await repo2.mark(openGig.id, bitId, result)
-              // Отметка меняет судьбу шутки: обкатанная становится кандидатом
-              // в сет, дважды рассмешившая — отшлифованной.
-              await repo.refreshStatus(bitId)
-              return prev ? { store: 'performances', row: prev } : null
-            })}
-          onDuration={(sec) =>
-            void commit(UNDO_LABEL.durationSet, async () => {
-              const prev = await repo2.setGigDuration(openGig.id, sec)
-              return prev ? { store: 'gigs', row: prev } : null
-            })}
-          onBack={() => setOverlay({ kind: 'none' })}
-        />
+        (() => {
+          const s = cmd.stage.setList(openSet.id)
+          return (
+            <SetListEditor
+              setList={openSet}
+              bits={data.bits}
+              scores={app.scores}
+              onAddBit={(bitId, dur) => void s.addBit(bitId, dur)}
+              onRemove={(itemId) => void s.remove(itemId)}
+              onRole={(itemId, role) => void s.setRole(itemId, role)}
+              onMove={(itemId, delta) => void s.move(itemId, delta)}
+              onTarget={(sec) => void s.setTarget(sec)}
+              onStage={() => go({ kind: 'stage', id: openSet.id })}
+              onDelete={() => { void s.deleteSet(); go({ kind: 'none' }) }}
+            />
+          )
+        })()
+      ) : openGig ? (
+        (() => {
+          const g = cmd.stage.gig(openGig.id)
+          return (
+            <GigReviewScreen
+              gig={openGig}
+              setList={data.setLists.find((s) => s.id === openGig.setListId) ?? null}
+              bits={data.bits}
+              performances={data.performances}
+              onMark={(bitId, result) => void g.mark(bitId, result)}
+              onDuration={(sec) => void g.setDuration(sec)}
+              onBack={() => go({ kind: 'none' })}
+            />
+          )
+        })()
       ) : overlay.kind === 'settings' ? (
         <BackupScreen
           bitCount={data.bits.length}
           topicCount={data.topics.length}
-          persistent={persistent}
-          lastBackupAt={lastBackupAt}
-          onExport={() => void exportVault()}
-          onImport={importVault}
-          onExportMarkdown={doExport}
+          persistent={app.persistent}
+          lastBackupAt={backup.lastBackupAt}
+          onExport={() => void backup.exportNow()}
+          onImport={backup.importFile}
+          onExportMarkdown={backup.exportMarkdownFile}
         />
       ) : tab === 'today' ? (
         <TodayScreen
-          progress={progress}
-          settings={data.settings ?? { id: 'settings', goalMinutes: 5, comedyVision: '', meta: { updatedAt: 0, lamport: 0, deviceId: '', deletedAt: null } }}
+          progress={app.progress}
+          settings={data.settings}
           hasAnything={data.bits.length + data.topics.length > 0}
-          onGoal={(m) =>
-            void commit(UNDO_LABEL.goalSet, async () => {
-              const prev = await repo2.saveSettings({ goalMinutes: m })
-              return { store: 'settings', row: prev }
-            })}
-          onVision={(v) =>
-            void commit(UNDO_LABEL.visionSet, async () => {
-              const prev = await repo2.saveSettings({ comedyVision: v })
-              return { store: 'settings', row: prev }
-            })}
-          onOpenSettings={() => setOverlay({ kind: 'settings' })}
+          onGoal={(m) => void cmd.practice.setGoal(m)}
+          onVision={(v) => void cmd.practice.setVision(v)}
+          onOpenSettings={() => go({ kind: 'settings' })}
         />
       ) : tab === 'practice' ? (
         <PracticeScreen
-          exercises={exercises}
+          exercises={app.exercises}
           records={data.exerciseRecords}
-          onToggle={(n, done) =>
-            void commit(UNDO_LABEL.exerciseToggled(n), async () => {
-              const prev = await repo2.toggleExercise(n, done)
-              return prev ? { store: 'exercises', row: prev } : null
-            })}
-          onNote={(n, note) =>
-            void commit(UNDO_LABEL.exerciseNote(n), async () => {
-              const prev = await repo2.setExerciseNote(n, note)
-              return prev ? { store: 'exercises', row: prev } : null
-            })}
+          onToggle={(n, done) => void cmd.practice.toggleExercise(n, done)}
+          onNote={(n, note) => void cmd.practice.setExerciseNote(n, note)}
         />
       ) : tab === 'material' ? (
-        <div class="scroll" data-screen="material">
-          <div class="card">
-            <input
-              type="text" data-testid="search" placeholder={T.searchPlaceholder}
-              value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-            />
-          </div>
-          {found ? (
-            found.length === 0 ? (
-              <p class="empty">{T.searchEmpty}</p>
-            ) : (
-              <ul class="list" data-testid="search-results">
-                {found.map((b) => (
-                  <li key={b.id} class="item" onClick={() => setOverlay({ kind: 'bit', id: b.id })}>
-                    <div class="grow"><div class="title">{b.title}</div></div>
-                    <span class="badge">{STATUS_LABEL[b.status]}</span>
-                  </li>
-                ))}
-              </ul>
-            )
-          ) : (
-            <>
-              <InboxScreen
-                bits={data.bits}
-                topicTitle={(id) => data.topics.find((t) => t.id === id)?.title ?? T.noTopic}
-                onAdd={(title) => commitCreate(UNDO_LABEL.bitCreated, 'bits', () => repo.addBit(title))}
-                onOpen={(id) => setOverlay({ kind: 'bit', id })}
-              />
-              <TopicsScreen
-                topics={data.topics}
-                bitCount={(id) => data.bits.filter((b) => b.topicId === id).length}
-                onAdd={(title) => commitCreate(UNDO_LABEL.topicAdded, 'topics', () => repo.addTopic(title))}
-                onDelete={(id) =>
-                  commit(UNDO_LABEL.topicDeleted, async () => {
-                    const prev = await repo.deleteTopic(id)
-                    return prev ? { store: 'topics', row: prev } : null
-                  })}
-              />
-            </>
-          )}
-        </div>
+        <MaterialScreen
+          bits={data.bits}
+          topics={data.topics}
+          onAddBit={cmd.material.addBit}
+          onAddTopic={cmd.material.addTopic}
+          onDeleteTopic={cmd.material.deleteTopic}
+          onOpenBit={(id) => go({ kind: 'bit', id })}
+        />
       ) : tab === 'sets' ? (
         <div class="scroll" data-screen="sets">
           <SetListsScreen
             setLists={data.setLists}
-            onAdd={(title, target) =>
-              void commitCreate(UNDO_LABEL.setCreated, 'setLists', () => repo2.addSetList(title, target))}
-            onOpen={(id) => setOverlay({ kind: 'set', id })}
+            onAdd={(title, target) => void cmd.stage.addSetList(title, target)}
+            onOpen={(id) => go({ kind: 'set', id })}
           />
           <GigsScreen
             gigs={data.gigs}
             setLists={data.setLists}
-            onAdd={(setId, type: GigType, venue) =>
-              void commitCreate(UNDO_LABEL.gigCreated, 'gigs', () => repo2.addGig(setId, type, venue))}
-            onOpen={(id) => setOverlay({ kind: 'review', id })}
+            onAdd={(setId, type, venue) => void cmd.stage.addGig(setId, type, venue)}
+            onOpen={(id) => go({ kind: 'review', id })}
           />
         </div>
       ) : (
         <JournalScreen
           entries={data.journal}
-          streakDays={progress.streakDays}
-          onSave={(text, sec) =>
-            void commitCreate(UNDO_LABEL.journalSaved, 'journal', () => repo2.addJournalEntry(text, sec))}
-          onHarvest={(text) => {
-            void commitCreate(UNDO_LABEL.bitCreated, 'bits', () => repo.addBit(text))
-            setTab('material')
-          }}
-          onDelete={(id) =>
-            void commit(UNDO_LABEL.journalDeleted, async () => {
-              const prev = await repo2.deleteJournalEntry(id)
-              return prev ? { store: 'journal', row: prev } : null
-            })}
+          streakDays={app.progress.streakDays}
+          onSave={(text, sec) => void cmd.practice.saveJournal(text, sec)}
+          onHarvest={(text) => { void cmd.material.addBit(text); setTab('material') }}
+          onDelete={(id) => void cmd.practice.deleteJournal(id)}
         />
       )}
 
@@ -540,16 +239,10 @@ export function App() {
 
       {overlay.kind === 'none' && (
         <nav class="tabs">
-          {([
-            ['today', T.tabToday],
-            ['practice', T.tabPractice],
-            ['material', T.tabMaterial],
-            ['sets', T.tabSets],
-            ['journal', T.tabJournal],
-          ] as [Tab, string][]).map(([id, label]) => (
+          {TABS.map(([id, label]) => (
             <button
               key={id} class={tab === id ? 'on' : ''} data-testid={`tab-${id}`}
-              onClick={() => { setTab(id); setQuery(''); setHelpOpen(false) }}
+              onClick={() => { setTab(id); setHelpOpen(false) }}
             >
               {label}
             </button>

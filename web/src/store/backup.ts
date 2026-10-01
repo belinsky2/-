@@ -1,4 +1,6 @@
-import { STORES, getAll, type StoreName } from './db'
+import { STORES, getAll, putAll, type StoreName } from './db'
+import { wins, type SyncMeta } from '../domain/identity'
+import type { MutationSink } from './sink'
 
 /**
  * Архив всего материала одним файлом.
@@ -154,4 +156,68 @@ export function backupDue(
   if (changesSince === 0) return false
   if (lastBackupAt === null) return changesSince >= CHANGES_BEFORE_BACKUP
   return changesSince >= CHANGES_BEFORE_BACKUP || now - lastBackupAt >= MILLIS_BEFORE_BACKUP
+}
+
+/** Итог восстановления — что именно произошло с материалом. */
+export type ImportReport =
+  | { readonly ok: true; readonly added: number; readonly updated: number; readonly kept: number }
+  | { readonly ok: false; readonly reason: string }
+
+/** Разбор файла архива. Битый файл — это отказ с причиной, а не исключение. */
+export function parseVault(text: string): { ok: true; raw: unknown } | { ok: false; reason: string } {
+  try {
+    return { ok: true, raw: JSON.parse(text) }
+  } catch {
+    return { ok: false, reason: 'файл повреждён: это не архив' }
+  }
+}
+
+interface Row { id: string; meta?: SyncMeta }
+
+/**
+ * Восстановление из архива слиянием, а не перезаписью.
+ *
+ * Для каждой записи остаётся та версия, что побеждает по логическим часам.
+ * Прежняя реализация клала архив поверх базы целиком, и восстановление
+ * старого архива молча стирало всё, что было сделано после него.
+ *
+ * Разделы, которых эта версия приложения не знает, пропускаются: архив,
+ * сделанный более новой версией, не должен обрывать импорт на середине.
+ */
+export async function importVault(
+  db: IDBDatabase,
+  sink: MutationSink,
+  raw: unknown,
+): Promise<ImportReport> {
+  const check = inspectVault(raw)
+  if (!check.ok) return { ok: false, reason: check.reason ?? 'архив не прочитан' }
+
+  const data = (raw as { data: Record<string, unknown> }).data
+  let added = 0
+  let updated = 0
+  let kept = 0
+
+  for (const store of STORES) {
+    const list = data[store]
+    if (!Array.isArray(list)) continue
+    const local = new Map((await getAll<Row>(db, store)).map((r) => [r.id, r]))
+    const toWrite: unknown[] = []
+
+    for (const item of list.map(decodeRow) as Row[]) {
+      if (!item || typeof item.id !== 'string') continue
+      if (item.meta) sink.observe(item.meta.lamport)
+      const mine = local.get(item.id)
+      if (!mine) {
+        toWrite.push(item)
+        added++
+      } else if (item.meta && (!mine.meta || wins(item.meta, mine.meta))) {
+        toWrite.push(item)
+        updated++
+      } else {
+        kept++
+      }
+    }
+    await putAll(db, store, toWrite)
+  }
+  return { ok: true, added, updated, kept }
 }
